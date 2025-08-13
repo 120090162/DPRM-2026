@@ -14,6 +14,23 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE RELEASE)
 add_compile_options(-O3 -w) # 禁用警告
 
+# ref to https://github.com/xizhibei/blog/issues/145
+# 使用ccache提高编译速度
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    message(STATUS "Set up ccache ...")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
+
+# 开启 Interprocedural optimization
+include(CheckIPOSupported)
+check_ipo_supported(RESULT _IsIPOSupported)
+    if(_IsIPOSupported)
+    message(STATUS "Turn on INTERPROCEDURAL_OPTIMIZATION")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 # OpenCV
 find_package(OpenCV 4.10.0 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
