@@ -1,1 +1,186 @@
 # DPRM-2026
+The demo of CUHKsz 过港龙战队视觉算法库.
+代码参考: https://github.com/HHgzs/OpenRM-2024?tab=readme-ov-file
+
+## 📖 Getting Started
+Recommend Environment
+```bash
+nvcc --version # 12.6
+dpkg -l libcudnn9 # cudnn 9.3
+dpkg-query -W tensorrt # TensorRT 10.3
+cmake --version # 3.24.0
+```
+
+You can follow the following instructions to get this env:
+
+1. Go to docker folder to build the env.
+2. In the docker env, install the dependencies.
+
+Dependence
+
+The following is assumed that your platform is `amd64`, if you use Jetson, please read [Jetson](./doc/Jetson配置.md) .
+- gcc/g++ 设置为 8.4.0
+```bash
+sudo apt update
+# gcc-8
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/gcc-8_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.edge.kernel.org/ubuntu/pool/universe/g/gcc-8/gcc-8-base_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/libgcc-8-dev_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/cpp-8_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/libmpx2_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/main/i/isl/libisl22_0.22.1-1_amd64.deb
+sudo apt install ./libisl22_0.22.1-1_amd64.deb ./libmpx2_8.4.0-3ubuntu2_amd64.deb ./cpp-8_8.4.0-3ubuntu2_amd64.deb ./libgcc-8-dev_8.4.0-3ubuntu2_amd64.deb ./gcc-8-base_8.4.0-3ubuntu2_amd64.deb ./gcc-8_8.4.0-3ubuntu2_amd64.deb -y --no-install-recommends
+# g++-8
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/libstdc++-8-dev_8.4.0-3ubuntu2_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-8/g++-8_8.4.0-3ubuntu2_amd64.deb
+sudo apt install ./libstdc++-8-dev_8.4.0-3ubuntu2_amd64.deb ./g++-8_8.4.0-3ubuntu2_amd64.deb -y --no-install-recommends
+
+# 验证安装
+g++-8 --version
+gcc-8 --version
+
+# Force gcc/g++ 8
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+
+# 验证版本
+g++ --version
+gcc --version
+
+# 清除残留
+rm *.deb
+```
+- Eigen 3.4.0 安装
+```bash
+sudo apt install libeigen3-dev
+# 验证版本
+pkg-config --modversion eigen3
+```
+- Ceres 1.14.0 安装
+```bash
+# 安装依赖
+sudo apt-get install liblapack-dev libsuitesparse-dev libcxsparse3 libgflags-dev libgoogle-glog-dev libgtest-dev
+# 下载
+wget https://github.com/ceres-solver/ceres-solver/archive/refs/tags/1.14.0.tar.gz
+tar -zxvf 1.14.0.tar.gz
+cd ceres-solver-1.14.0/
+mkdir build
+cd build/
+# 编译
+# ref to https://blog.csdn.net/SoftwarerRJY/article/details/113354759
+cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+make -j$(nproc)
+sudo make install
+# 清除残留
+cd ../..
+rm 1.14.0.tar.gz
+```
+上述编译过程可能会出现以下报错
+```bash
+CMake Error at cmake/FindTBB.cmake:224 (file):
+  file failed to open for reading (No such file or directory):
+
+    /usr/include/tbb/tbb_stddef.h
+Call Stack (most recent call first):
+  cmake/FindSuiteSparse.cmake:294 (find_package)
+  CMakeLists.txt:266 (find_package)
+```
+Refer to [https://github.com/ceres-solver/ceres-solver/issues/669](https://github.com/ceres-solver/ceres-solver/issues/669)
+修改`ceres-solver-1.14.0/cmake/FindTBB.cmake`的224行
+```bash
+# 修改 file(READ "${TBB_INCLUDE_DIRS}/tbb/tbb_stddef.h" _tbb_version_file) 为
+file(READ "${TBB_INCLUDE_DIRS}/tbb/version.h" _tbb_version_file)
+```
+修改后重新编译即可
+- Ncurses 安装
+```bash
+sudo apt-get install libncurses5-dev libncursesw5-dev
+```
+注意由于`ncueses`中的宏定义`OK`与 `OpenCV` 中冲突，所以需要对其进行修改
+```bash
+# 修改权限
+sudo chmod 777 /usr/include/curses.h
+# 使用VSCode全局替换，将 OK 修改为 KO
+# 再回退权限避免错误访问
+sudo chmod 644 /usr/include/curses.h
+```
+- OpenCV 4.10.0 多版本并存安装
+请参考[link](https://developer.nvidia.com/cuda-gpus#compute)
+获取GPU算力，并修改`setup/OpenCV-4-10-0-amd64.sh`中的`ARCH`和`PTX`的值
+```bash
+sudo mkdir /usr/local/opencv4.10.0
+# 自瞄仓库
+git clone https://github.com/120090162/dp2026_auto_aim.git
+cd setup
+sudo chmod 755 ./OpenCV-4-10-0-amd64.sh
+# remove existed opencv
+sudo apt purge libopencv*
+sudo apt update
+# 切记不要使用sudo apt autoremove 避免环境依赖出错
+# install
+./OpenCV-4-10-0-amd64.sh
+# once the installation is done...
+rm OpenCV-4-10-0-amd64.sh
+# just a tip to save an additional 275 MB
+sudo rm -rf ~/opencv
+sudo rm -rf ~/opencv_contrib
+sudo rm ~/opencv.zip ~/opencv_contrib.zip
+```
+- 海康威视驱动安装
+
+---
+自瞄框架编译
+```bash
+sudo ./run.sh -t
+```
+`run.sh` 有多种功能：
+
+- **-t** 编译安装**OpenRM**动态链接库后，编译安装名为 **openrm** 的参数面板程序
+- **-r** 删除编译和安装结果，并重新编译
+- **-d** 彻底删除 OpenRM
+- **-i** 重新安装
+- **-g \<arg>** 调用git，需添加commit
+- 不添加参数，只编译安装 **OpenRM** 动态链接库
+
+## 🕹️ Play!
+* Visualize the model in drake/mujoco
+
+  * drake
+
+      ```bash
+      # example
+      python scripts/visualize_model_drake.py kuavo/s46/biped_s46.urdf biped_s46
+      ```
+
+  * mujoco
+
+      ```bash
+      # example
+      python scripts/visualize_model_mujoco.py kuavo.yaml
+      ```
+      
+* Run HLIP+CIMPC algorithm in drake/mujoco+drake
+
+  * drake
+
+      ```bash
+      # example
+      python demo/drake/achilles_se3/main.py --with_arms
+      ```
+
+  * mujoco+drake
+
+      ```bash
+      # example
+      python demo/mujoco/achilles/main_walk.py 
+
+# 学习记录
+[tensorrt使用](https://github.com/wdhao/tensorrtCV.git)
+[yolov5训练](https://github.com/Spphire/YOLOarmor-2022final)
+[上交自瞄参考1](https://github.com/Harry-hhj/CVRM2021-sjtu)
+[上交自瞄参考2](https://github.com/julyfun/rm.cv.fans)
+
+`TensorRT`的路径在`/usr/src/tensorrt`下面
+
+[数据集](https://github.com/zRzRzRzRzRzRzR/YOLO-of-RoboMaster-Keypoints-Detection-2023)
+[博客](https://sjtu-robomaster-team.github.io/)
