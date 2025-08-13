@@ -1,0 +1,22 @@
+check for added large files..............................................[42mPassed[m
+check python ast.....................................(no files to check)[46;30mSkipped[m
+check for case conflicts.................................................[42mPassed[m
+check docstring is first.............................(no files to check)[46;30mSkipped[m
+check for merge conflicts................................................[42mPassed[m
+check for broken symlinks............................(no files to check)[46;30mSkipped[m
+check xml............................................(no files to check)[46;30mSkipped[m
+check yaml...........................................(no files to check)[46;30mSkipped[m
+debug statements (python)............................(no files to check)[46;30mSkipped[m
+fix end of files.........................................................[42mPassed[m
+mixed line ending........................................................[42mPassed[m
+trim trailing whitespace.................................................[42mPassed[m
+fix utf-8 byte order marker..............................................[42mPassed[m
+pyupgrade............................................(no files to check)[46;30mSkipped[m
+ruff (legacy alias)..................................(no files to check)[46;30mSkipped[m
+ruff format..........................................(no files to check)[46;30mSkipped[m
+clang-format.............................................................[42mPassed[m
+ament_cppcheck...........................................................[42mPassed[m
+ament_lint_cmake.........................................................[42mPassed[m
+Validate GitHub Workflows............................(no files to check)[46;30mSkipped[m
+Validate GitHub Actions..............................(no files to check)[46;30mSkipped[m
+Validate Dependabot Config (v2)......................(no files to check)[46;30mSkipped[m

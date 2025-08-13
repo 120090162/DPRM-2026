@@ -1,13 +1,28 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <iostream>
 #include <map>
 #include <string>
-#include <iostream>
+#include "structure/camera.hpp"
+#include "structure/stamp.hpp"
 #include "uniterm/uniterm.h"
 #include "utils/timer.h"
-#include "structure/stamp.hpp"
-#include "structure/camera.hpp"
-#include "video/video.h"
-#include "video/daheng/GxIAPI.h"
 #include "video/daheng/DxImageProc.h"
+#include "video/daheng/GxIAPI.h"
+#include "video/video.h"
 
 using namespace rm;
 using namespace std;
@@ -26,15 +41,17 @@ void GX_STDC OnFrameCallbackFun(GX_FRAME_CALLBACK_PARAM* capture_frame) {
     TimePoint time_stamp = getTime();
     CallbackParam* callback_param = reinterpret_cast<CallbackParam*>(capture_frame->pUserParam);
     float yaw = 0, pitch = 0, roll = 0;
-    if (callback_param->yaw != nullptr && callback_param->pitch != nullptr && callback_param->roll != nullptr) {
+    if (callback_param->yaw != nullptr && callback_param->pitch != nullptr
+        && callback_param->roll != nullptr)
+    {
         yaw = *(callback_param->yaw);
         pitch = *(callback_param->pitch);
         roll = *(callback_param->roll);
     }
 
-    Camera *camera = callback_param->camera;
+    Camera* camera = callback_param->camera;
     bool flip = callback_param->flip;
-    
+
     shared_ptr<Frame> frame = make_shared<Frame>();
 
     frame->image = make_shared<cv::Mat>(camera->height, camera->width, CV_8UC3);
@@ -45,7 +62,6 @@ void GX_STDC OnFrameCallbackFun(GX_FRAME_CALLBACK_PARAM* capture_frame) {
     frame->yaw = yaw;
     frame->pitch = pitch;
     frame->roll = roll;
-    
 
     DX_BAYER_CONVERT_TYPE convert_type = RAW2RGB_NEIGHBOUR;
     DX_PIXEL_COLOR_FILTER color_filter = DX_PIXEL_COLOR_FILTER(callback_param->bayer_type);
@@ -86,16 +102,11 @@ bool rm::getDaHengCameraNum(int& num) {
         GXCloseLib();
         return false;
     }
-    num = static_cast<int>(device_num); 
+    num = static_cast<int>(device_num);
     return true;
 }
 
-bool rm::setDaHengArgs(
-    Camera *camera,
-    double exposure,
-    double gain,
-    double fps
-) {
+bool rm::setDaHengArgs(Camera* camera, double exposure, double gain, double fps) {
     GX_DEV_HANDLE device = camap[camera->camera_id];
     GX_STATUS status;
 
@@ -109,12 +120,12 @@ bool rm::setDaHengArgs(
     exposure = clamp(exposure, exposure_time_range.dMin, exposure_time_range.dMax);
     gain = clamp(gain, gain_range.dMin, gain_range.dMax);
     fps = clamp(fps, frame_rate_range.dMin, frame_rate_range.dMax);
-    
+
     // 曝光
     status = GXSetEnum(device, GX_ENUM_EXPOSURE_AUTO, GX_EXPOSURE_AUTO_OFF);
     status = GXSetEnum(device, GX_ENUM_EXPOSURE_MODE, GX_EXPOSURE_MODE_TIMED);
     status = GXSetFloat(device, GX_FLOAT_EXPOSURE_TIME, exposure);
-    
+
     // 增益
     status = GXSetEnum(device, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_OFF);
     status = GXSetFloat(device, GX_FLOAT_GAIN, gain);
@@ -122,7 +133,8 @@ bool rm::setDaHengArgs(
     // 帧率
     status = GXSetEnum(device, GX_ENUM_ACQUISITION_MODE, GX_ACQ_MODE_CONTINUOUS);
     status = GXSetEnum(device, GX_ENUM_TRIGGER_MODE, GX_TRIGGER_MODE_OFF);
-    status = GXSetEnum(device, GX_ENUM_ACQUISITION_FRAME_RATE_MODE, GX_ACQUISITION_FRAME_RATE_MODE_ON);
+    status =
+        GXSetEnum(device, GX_ENUM_ACQUISITION_FRAME_RATE_MODE, GX_ACQUISITION_FRAME_RATE_MODE_ON);
     status = GXSetFloat(device, GX_FLOAT_ACQUISITION_FRAME_RATE, fps);
 
     // 白平衡 黑电平
@@ -138,18 +150,18 @@ bool rm::setDaHengArgs(
 }
 
 bool rm::openDaHeng(
-    Camera *camera,
+    Camera* camera,
     int device_num,
-    float *yaw_ptr,
-    float *pitch_ptr,
-    float *roll_ptr,
+    float* yaw_ptr,
+    float* pitch_ptr,
+    float* roll_ptr,
     bool flip,
     double exposure,
     double gain,
     double fps
 ) {
     // 初始化camera对象
-    if(camera == nullptr) {
+    if (camera == nullptr) {
         rm::message("Video DaHeng error at nullptr camera", rm::MSG_ERROR);
         return false;
     }
@@ -158,7 +170,6 @@ bool rm::openDaHeng(
     }
     camera->buffer = new SwapBuffer<Frame>();
     camera->camera_id = device_num;
-    
 
     // 打开设备
     GX_OPEN_PARAM open_param;
@@ -170,13 +181,13 @@ bool rm::openDaHeng(
 
     GX_DEV_HANDLE device;
     GX_STATUS status = GXOpenDevice(&open_param, &device);
-    
+
     if (status != GX_STATUS_SUCCESS) {
         rm::message("Video DaHeng open camera failed", rm::MSG_ERROR);
         GXCloseLib();
         return false;
     }
-    
+
     // 将设备句柄存入map
     camap[device_num] = device;
 
@@ -225,10 +236,10 @@ bool rm::openDaHeng(
     callback_param->flip = flip;
 
     status = GXRegisterCaptureCallback(
-            device,
-            reinterpret_cast<void*>(callback_param),
-            OnFrameCallbackFun
-        );
+        device,
+        reinterpret_cast<void*>(callback_param),
+        OnFrameCallbackFun
+    );
 
     if (status != GX_STATUS_SUCCESS) {
         rm::message("Video DaHeng set callback function failed", rm::MSG_ERROR);
@@ -244,19 +255,18 @@ bool rm::openDaHeng(
         return false;
     }
     rm::message("Video DaHeng opened", rm::MSG_OK);
-    
+
     return true;
 }
 
-
 bool rm::closeDaHeng() {
     GX_STATUS status;
-    for(auto it = camap.begin(); it != camap.end(); it++) {
+    for (auto it = camap.begin(); it != camap.end(); it++) {
         GX_DEV_HANDLE device = it->second;
         status = GXSendCommand(device, GX_COMMAND_ACQUISITION_STOP);
         status = GXUnregisterCaptureCallback(device);
         status = GXCloseDevice(device);
-        if(status != GX_STATUS_SUCCESS) {
+        if (status != GX_STATUS_SUCCESS) {
             rm::message("Video DaHeng close device failed", rm::MSG_ERROR);
             GXCloseLib();
             return false;

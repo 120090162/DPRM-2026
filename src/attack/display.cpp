@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "attack/attack.h"
 using namespace rm;
 
@@ -56,15 +71,33 @@ void AttackDisplayer::push(double body_angle, double head_angle) {
     cv::circle(canvas_, cv::Point(center_xy, center_xy), body_r, cv::Scalar(0, 255, 255), 2);
     cv::circle(canvas_, cv::Point(center_xy, center_xy), head_r, cv::Scalar(0, 255, 0), 2);
 
-    cv::Point body_end((body_r + extend) * cos(body_angle) + center_xy, center_xy - (body_r + extend) * sin(body_angle));
-    cv::Point body_start_0(body_r * cos(body_angle + 0.5) + center_xy, center_xy - body_r * sin(body_angle + 0.5));
-    cv::Point body_start_1(body_r * cos(body_angle - 0.5) + center_xy, center_xy - body_r * sin(body_angle - 0.5));
+    cv::Point body_end(
+        (body_r + extend) * cos(body_angle) + center_xy,
+        center_xy - (body_r + extend) * sin(body_angle)
+    );
+    cv::Point body_start_0(
+        body_r * cos(body_angle + 0.5) + center_xy,
+        center_xy - body_r * sin(body_angle + 0.5)
+    );
+    cv::Point body_start_1(
+        body_r * cos(body_angle - 0.5) + center_xy,
+        center_xy - body_r * sin(body_angle - 0.5)
+    );
     cv::line(canvas_, body_start_0, body_end, cv::Scalar(0, 255, 255), 2);
     cv::line(canvas_, body_start_1, body_end, cv::Scalar(0, 255, 255), 2);
 
-    cv::Point head_end((head_r + extend) * cos(head_angle) + center_xy, center_xy - (head_r + extend) * sin(head_angle));
-    cv::Point head_start_0(head_r * cos(head_angle + 0.5) + center_xy, center_xy - head_r * sin(head_angle + 0.5));
-    cv::Point head_start_1(head_r * cos(head_angle - 0.5) + center_xy, center_xy - head_r * sin(head_angle - 0.5));
+    cv::Point head_end(
+        (head_r + extend) * cos(head_angle) + center_xy,
+        center_xy - (head_r + extend) * sin(head_angle)
+    );
+    cv::Point head_start_0(
+        head_r * cos(head_angle + 0.5) + center_xy,
+        center_xy - head_r * sin(head_angle + 0.5)
+    );
+    cv::Point head_start_1(
+        head_r * cos(head_angle - 0.5) + center_xy,
+        center_xy - head_r * sin(head_angle - 0.5)
+    );
     cv::line(canvas_, head_start_0, head_end, cv::Scalar(0, 255, 0), 2);
     cv::line(canvas_, head_start_1, head_end, cv::Scalar(0, 255, 0), 2);
 }

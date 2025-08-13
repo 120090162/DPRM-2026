@@ -1,11 +1,26 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_ANTITOP_V3_H__
 #define __OPENRM_KALMAN_INTERFACE_ANTITOP_V3_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
+#include <utils/timer.h>
+#include <algorithm>
 #include <structure/slidestd.hpp>
 #include <structure/slideweighted.hpp>
-#include <algorithm>
 
 // [ x, y, z, theta, vx, vy, vz, omega, r ]  [ x, y, z, theta]
 // [ 0, 1, 2,   3,   4,  5,  6,    7,   8 ]  [ 0, 1, 2,   3  ]
@@ -44,7 +59,7 @@ struct AntitopV3_FuncH {
     }
 };
 
-struct AntitopV3_CenterFuncA{
+struct AntitopV3_CenterFuncA {
     double dt;
     template<class T>
     void operator()(T& A) {
@@ -54,7 +69,7 @@ struct AntitopV3_CenterFuncA{
     }
 };
 
-struct AntitopV3_CenterFuncH{
+struct AntitopV3_CenterFuncH {
     template<class T>
     void operator()(T& H) {
         H = T::Zero();
@@ -82,12 +97,9 @@ struct AntitopV3_OmegaFuncH {
     }
 };
 
-
-
 // AntitopV1类
 // 使用基于扩展卡尔曼的中心预测模型
 class AntitopV3 {
-
 public:
     AntitopV3();
     AntitopV3(double r_min, double r_max, int armor_num = 4, bool enable_weighted = false);
@@ -103,8 +115,13 @@ public:
     void setCenterMatrixR(double, double);
     void setOmegaMatrixQ(double, double, double);
     void setOmegaMatrixR(double);
-    void setRadiusRange(double r_min, double r_max) { r_min_ = r_min; r_max_ = r_max; }
-    void setArmorNum(int armor_num) { armor_num_ = armor_num; }
+    void setRadiusRange(double r_min, double r_max) {
+        r_min_ = r_min;
+        r_max_ = r_max;
+    }
+    void setArmorNum(int armor_num) {
+        armor_num_ = armor_num;
+    }
     void setFireValue(int update_num, double delay, double armor_angle, double center_angle) {
         fire_update_ = update_num;
         fire_delay_ = delay;
@@ -112,53 +129,56 @@ public:
         fire_center_angle_ = center_angle;
     }
 
-    double getOmega() { return omega_model_.estimate_X[1];};
-    void   getStateStr(std::vector<std::string>& str); 
-    bool   getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
-    bool   getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
+    double getOmega() {
+        return omega_model_.estimate_X[1];
+    };
+    void getStateStr(std::vector<std::string>& str);
+    bool getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
+    bool getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
 
 private:
-    double getSafeSub(const double, const double);                  // 角度安全减法
-    double getAngleTrans(const double, const double);               // 将模型内角度转换为接近新角度
-    double getAngleTrans(const double, const double, double);       // 将模型内角度转换为接近新角度，转换考虑预测
-    double getAngleMin(const double, const double, const double);   // 获取角度最小值
-    int    getToggle(const double, const double);                   // 获取切换标签
-    double getWeightByTheta(const double);                          // 根据角度获取权重
-    bool   isAngleTrans(const double, const double);                
+    double getSafeSub(const double, const double); // 角度安全减法
+    double getAngleTrans(const double, const double); // 将模型内角度转换为接近新角度
+    double
+    getAngleTrans(const double, const double, double); // 将模型内角度转换为接近新角度，转换考虑预测
+    double getAngleMin(const double, const double, const double); // 获取角度最小值
+    int getToggle(const double, const double); // 获取切换标签
+    double getWeightByTheta(const double); // 根据角度获取权重
+    bool isAngleTrans(const double, const double);
 
-    double   r_[2] = {0.25, 0.25};                                  // 两个位姿的半径
-    double   z_[2] = {0, 0};                                        // 两个位姿的高度
+    double r_[2] = { 0.25, 0.25 }; // 两个位姿的半径
+    double z_[2] = { 0, 0 }; // 两个位姿的高度
 
-    double   r_min_ = 0.15;                                         // 最小半径
-    double   r_max_ = 0.4;                                          // 最大半径
+    double r_min_ = 0.15; // 最小半径
+    double r_max_ = 0.4; // 最大半径
 
-    int      fire_update_ = 100;                                    // 开火更新次数
-    double   fire_delay_ = 0.5;                                     // 认为模型可用的最大延迟
-    double   fire_armor_angle_ = 0.5;                               // 跟随模式开火角度
-    double   fire_center_angle_ = 0.2;                              // 中心模式装甲板开火角度
-    
-    int      toggle_ = 0;                                           // 切换标签
-    int      armor_num_ = 4;                                        // 装甲板数量
-    int      update_num_ = 0;                                       // 更新次数
+    int fire_update_ = 100; // 开火更新次数
+    double fire_delay_ = 0.5; // 认为模型可用的最大延迟
+    double fire_armor_angle_ = 0.5; // 跟随模式开火角度
+    double fire_center_angle_ = 0.2; // 中心模式装甲板开火角度
 
-    bool     enable_weighted_ = false;                              // 是否使用加权平均z值
-    
-    EKF<9, 4>              model_;                                  // 运动模型
-    KF<4, 2>               center_model_;                           // 中心模型
-    KF<3, 1>               omega_model_;                            // 角速度模型
+    int toggle_ = 0; // 切换标签
+    int armor_num_ = 4; // 装甲板数量
+    int update_num_ = 0; // 更新次数
 
-    SlideWeightedAvg<double>* weighted_z_;                          // z值加权平均
-    
-    AntitopV3_FuncA        funcA_;                                  // 运动模型的状态转移函数
-    AntitopV3_FuncH        funcH_;                                  // 运动模型的观测函数
-    AntitopV3_CenterFuncA  center_funcA_;                           // 中心模型的状态转移函数
-    AntitopV3_CenterFuncH  center_funcH_;                           // 中心模型的观测函数
-    AntitopV3_OmegaFuncA   omega_funcA_;                            // 角速度模型的状态转移函数
-    AntitopV3_OmegaFuncH   omega_funcH_;                            // 角速度模型的观测函数
+    bool enable_weighted_ = false; // 是否使用加权平均z值
 
-    TimePoint t_;                                                   // 上一次更新的时间
+    EKF<9, 4> model_; // 运动模型
+    KF<4, 2> center_model_; // 中心模型
+    KF<3, 1> omega_model_; // 角速度模型
+
+    SlideWeightedAvg<double>* weighted_z_; // z值加权平均
+
+    AntitopV3_FuncA funcA_; // 运动模型的状态转移函数
+    AntitopV3_FuncH funcH_; // 运动模型的观测函数
+    AntitopV3_CenterFuncA center_funcA_; // 中心模型的状态转移函数
+    AntitopV3_CenterFuncH center_funcH_; // 中心模型的观测函数
+    AntitopV3_OmegaFuncA omega_funcA_; // 角速度模型的状态转移函数
+    AntitopV3_OmegaFuncH omega_funcH_; // 角速度模型的观测函数
+
+    TimePoint t_; // 上一次更新的时间
 };
 
-}
+} // namespace rm
 
 #endif

@@ -33,5 +33,5 @@ add_executable(uvc_lib uvc_lib.cpp)
 target_link_libraries(uvc_lib
     ${OpenRM_LIBS}
     ${OpenCV_LIBS}
-    ${CERES_LIBRARIES}    
+    ${CERES_LIBRARIES}
 )

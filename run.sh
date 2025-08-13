@@ -16,7 +16,7 @@ total=$((include_count + src_count + cuda_count + terminal_count - daheng_count)
 max_threads=$(cat /proc/cpuinfo | grep "processor" | wc -l)
 
 
-if [ ! -d "build" ]; then 
+if [ ! -d "build" ]; then
     mkdir build
 fi
 
@@ -45,7 +45,7 @@ while getopts ":ritdg:" opt; do
             cmake ..
             sudo make install
             cd ../terminal
-            if [ ! -d "build" ]; then 
+            if [ ! -d "build" ]; then
                 mkdir build
             fi
             cd build
@@ -61,7 +61,7 @@ while getopts ":ritdg:" opt; do
             echo -e "${yellow}\nThe following files and directories will be deleted:${reset}"
             sudo find "$(pwd)" -maxdepth 1 -name "build"
             sudo find /usr/local/ -name "*openrm*"
-            
+
             echo -e "${red}Are you sure you want to delete openrm? (y/n): ${reset}"
             read answer
             if [ "$answer" == "y" ] || [ "$answer" == "Y" ]; then

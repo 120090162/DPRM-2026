@@ -5,10 +5,10 @@ install_opencv () {
   NO_JOB=$(nproc)
   ARCH=8.9
   PTX="sm_89"
-  
+
   echo "Installing OpenCV 4.10.0 using $NO_JOB threads for CUDA $ARCH with PTX $PTX on your system..."
   echo "It will take a very long time !"
-  
+
   # refer to https://gist.github.com/raulqf/f42c718a658cddc16f9df07ecc627be7
   # 依赖安装
   sudo apt update
@@ -27,7 +27,7 @@ install_opencv () {
   sudo apt install -y ffmpeg
   # Install video capture libraries and utilities
   sudo apt install -y libdc1394-dev libxine2-dev libv4l-dev v4l-utils
-  # GTK lib for the graphical user functionalites coming from OpenCV highghui module
+  # GTK lib for the graphical user functionalities coming from OpenCV highghui module
   sudo apt install -y libgtk-3-dev
   # Parallelism library C++ for CPU
   sudo apt install -y libtbb-dev
@@ -38,15 +38,15 @@ install_opencv () {
   sudo apt install -y libgoogle-glog-dev libgflags-dev
 
   # remove old versions or previous builds
-  cd ~ 
+  cd ~
   sudo rm -rf opencv*
   # download the latest version
-  wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip 
-  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip 
-  
+  wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip
+  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip
+
   # unpack
-  unzip opencv.zip 
-  unzip opencv_contrib.zip 
+  unzip opencv.zip
+  unzip opencv_contrib.zip
 
   # Some administration to make life easier later on
   mv opencv-4.10.0 opencv
@@ -56,7 +56,7 @@ install_opencv () {
   cd ~/opencv
   mkdir build
   cd build
-  
+
   # run cmake
   cmake -D CMAKE_BUILD_TYPE=RELEASE \
   -D CMAKE_INSTALL_PREFIX=/usr/local/opencv4.10.0 \
@@ -91,16 +91,16 @@ install_opencv () {
   -D BUILD_EXAMPLES=OFF \
   -D CMAKE_CXX_FLAGS="-march=native -mtune=native" \
   -D CMAKE_C_FLAGS="-march=native -mtune=native" ..
- 
-  make -j ${NO_JOB} 
-  
+
+  make -j ${NO_JOB}
+
   sudo make install
   sudo ldconfig
-  
+
   # cleaning (frees 320 MB)
   make clean
   sudo apt-get update
-  
+
   echo "Congratulations!"
   echo "You've successfully installed OpenCV 4.10.0 on your Nano"
 }
@@ -112,11 +112,11 @@ if [ -d ~/opencv/build ]; then
   echo "You have a directory ~/opencv/build on your disk."
   echo "Continuing the installation will replace this folder."
   echo " "
-  
+
   printf "Do you wish to continue (Y/n)?"
   read answer
 
-  if [ "$answer" != "${answer#[Nn]}" ] ;then 
+  if [ "$answer" != "${answer#[Nn]}" ] ;then
       echo "Leaving without installing OpenCV"
   else
       install_opencv

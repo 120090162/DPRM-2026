@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "solver/polynomial.h"
 #include <ceres/ceres.h>
 
@@ -7,12 +22,17 @@ struct Data {
 
 // 定义残差函数
 struct MultiVarPolynomialResidual {
-
     MultiVarPolynomialResidual::MultiVarPolynomialResidual(
-        const double x, const double y, const double z) : x_(x), y_(y), z_(z) {}
-    
-    template <typename T>
-    bool operator()(const T *const c, T *residual) const {
+        const double x,
+        const double y,
+        const double z
+    ):
+        x_(x),
+        y_(y),
+        z_(z) {}
+
+    template<typename T>
+    bool operator()(const T* const c, T* residual) const {
         int max = x_max;
         int cnt = 1;
         if (y_max > x_max)
@@ -40,7 +60,7 @@ struct MultiVarPolynomialResidual {
 
 static double R_2 = 0;
 
-static double *fitFactors;
+static double* fitFactors;
 
 static int fit_x_max, fit_y_max, fit_max;
 
@@ -64,7 +84,6 @@ double rm::getPrediction(double x, double y) {
 }
 
 void rm::initFit(int x_max, int y_max) {
-
     x_max++;
     y_max++;
     fit_x_max = x_max;
@@ -89,21 +108,22 @@ void rm::initFit(int x_max, int y_max) {
             }
         }
     }
-    fitFactors = (double *)malloc(cnt * sizeof(double));
+    fitFactors = (double*)malloc(cnt * sizeof(double));
 
     fitFactorsLen = cnt;
 }
 
-void rm::calculateFactors(std::vector<double> &inputs, bool isNeedR_2) {
+void rm::calculateFactors(std::vector<double>& inputs, bool isNeedR_2) {
     // 设置需要优化的参数
 
     int dataLength = inputs.size();
 
     ceres::Problem problem;
     for (int i = 0; i < dataLength; ++i) {
-        ceres::CostFunction *cost_function =
+        ceres::CostFunction* cost_function =
             new ceres::AutoDiffCostFunction<MultiVarPolynomialResidual, 1, 6>(
-                new MultiVarPolynomialResidual(inputs[i * 3], inputs[i * 3 + 1], inputs[i * 3 + 2]));
+                new MultiVarPolynomialResidual(inputs[i * 3], inputs[i * 3 + 1], inputs[i * 3 + 2])
+            );
         problem.AddResidualBlock(cost_function, NULL, fitFactors);
     }
 
@@ -159,8 +179,7 @@ void rm::calculateFactors(std::vector<double> &inputs, bool isNeedR_2) {
     R_2 = 1 - SSE / SST;
 }
 
-void rm::getFitFactors()
-{
+void rm::getFitFactors() {
     int cnt = 1;
 
     if (!fitFactorsLen)

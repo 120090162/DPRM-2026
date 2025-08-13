@@ -1,20 +1,35 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_ATTACK_ATTACK_H__
 #define __OPENRM_ATTACK_ATTACK_H__
 #include <utils/timer.h>
-#include <structure/stamp.hpp>
 #include <structure/enums.hpp>
+#include <structure/stamp.hpp>
 
 namespace rm {
 
 enum ValidByteMask {
-    VALID_BYTE_MASK_SENTRY    = 0x01,    // 0000 0001  0x01  哨兵
-    VALID_BYTE_MASK_HERO      = 0x02,    // 0000 0010  0x02  英雄
-    VALID_BYTE_MASK_ENGINEER  = 0x04,    // 0000 0100  0x04  工程
-    VALID_BYTE_MASK_INFANTRY3 = 0x08,    // 0000 1000  0x08  步兵3
-    VALID_BYTE_MASK_INFANTRY4 = 0x10,    // 0001 0000  0x10  步兵4
-    VALID_BYTE_MASK_INFANTRY5 = 0x20,    // 0010 0000  0x20  步兵5
-    VALID_BYTE_MASK_TOWER     = 0x40,    // 0100 0000  0x40  前哨站 基地
-    VALID_BYTE_MASK_ALL       = 0x80     // 1000 0000  0x80  全打
+    VALID_BYTE_MASK_SENTRY = 0x01, // 0000 0001  0x01  哨兵
+    VALID_BYTE_MASK_HERO = 0x02, // 0000 0010  0x02  英雄
+    VALID_BYTE_MASK_ENGINEER = 0x04, // 0000 0100  0x04  工程
+    VALID_BYTE_MASK_INFANTRY3 = 0x08, // 0000 1000  0x08  步兵3
+    VALID_BYTE_MASK_INFANTRY4 = 0x10, // 0001 0000  0x10  步兵4
+    VALID_BYTE_MASK_INFANTRY5 = 0x20, // 0010 0000  0x20  步兵5
+    VALID_BYTE_MASK_TOWER = 0x40, // 0100 0000  0x40  前哨站 基地
+    VALID_BYTE_MASK_ALL = 0x80 // 1000 0000  0x80  全打
 };
 
 bool isValidArmorID(ArmorID armor_id, char valid_byte);
@@ -32,9 +47,8 @@ double getAngleOffsetTargetToReferee(
     const double referee_pitch = 0.0,
     const double axis_x = 0.0,
     const double axis_y = 0.0,
-    const double axis_z = 0.0);
-
-
+    const double axis_z = 0.0
+);
 
 class AttackInterface {
 public:
@@ -46,23 +60,27 @@ public:
     virtual void refresh() = 0;
     virtual void clear() = 0;
 
-    void setFocusID(ArmorID armor_id) { focus_id_ = armor_id; };
-    void setExistDt(double dt) { exist_dt_ = dt; }
-    void setValidID(char valid_byte) { valid_byte_ = valid_byte; };
-
+    void setFocusID(ArmorID armor_id) {
+        focus_id_ = armor_id;
+    };
+    void setExistDt(double dt) {
+        exist_dt_ = dt;
+    }
+    void setValidID(char valid_byte) {
+        valid_byte_ = valid_byte;
+    };
 
 protected:
     ArmorID focus_id_;
     double exist_dt_ = 1.0;
     char valid_byte_ = 0xFF;
-
 };
 
-
 class AttackDisplayer {
-
 public:
-    AttackDisplayer(int canvas_side = 500, double max_dist = 5) : canvas_side_(canvas_side), max_dist_(max_dist) {
+    AttackDisplayer(int canvas_side = 500, double max_dist = 5):
+        canvas_side_(canvas_side),
+        max_dist_(max_dist) {
         canvas_ = cv::Mat(canvas_side_, canvas_side_, CV_8UC3, cv::Scalar(50, 50, 50));
     }
     ~AttackDisplayer() {};
@@ -72,14 +90,12 @@ public:
     void push(double body_angle, double head_angle);
     cv::Mat refresh();
 
-
 private:
     int canvas_side_ = 500;
     double max_dist_ = 5;
     cv::Mat canvas_;
-
 };
 
-}
+} // namespace rm
 
 #endif

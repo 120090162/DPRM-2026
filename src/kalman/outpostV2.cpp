@@ -1,7 +1,22 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "kalman/interface/outpostV2.h"
-#include "utils/print.h"
-#include "uniterm/uniterm.h"
 #include <cmath>
+#include "uniterm/uniterm.h"
+#include "utils/print.h"
 using namespace std;
 using namespace rm;
 
@@ -21,14 +36,14 @@ OutpostV2::OutpostV2() {
 
 void OutpostV2::push(const Eigen::Matrix<double, 4, 1>& pose, TimePoint t) {
     double dt = getDoubleOfS(t_, t);
-    if(dt > fire_delay_) {
+    if (dt > fire_delay_) {
         update_num_ = 0;
         model_.restart();
         omega_.clear();
     }
     update_num_++;
     t_ = t;
-    
+
     toggle_ = getToggle(pose[3], model_.estimate_X[3]);
     if (isAngleTrans(pose[3], omega_model_.estimate_X[3])) {
         model_.estimate_X[3] = pose[3];
@@ -67,7 +82,7 @@ Eigen::Matrix<double, 4, 1> OutpostV2::getPose(double append_delay) {
     double x_center = model_.estimate_X[0] + model_.estimate_X[4] * dt;
     double y_center = model_.estimate_X[1] + model_.estimate_X[5] * dt;
     double z_center = model_.estimate_X[2];
-    
+
     double omega = (omega_.getAvg() > 0) ? OUTPOST_OMEGA_V2 : -OUTPOST_OMEGA_V2;
     double predict_theta = model_.estimate_X[3] + omega * dt;
 
@@ -87,7 +102,7 @@ Eigen::Matrix<double, 4, 1> OutpostV2::getCenter(double append_delay) {
     if (sys_delay > fire_delay_) {
         return Eigen::Matrix<double, 4, 1>::Zero();
     }
-    
+
     double x_center = model_.estimate_X[0] + model_.estimate_X[4] * dt;
     double y_center = model_.estimate_X[1] + model_.estimate_X[5] * dt;
     double z_center = model_.estimate_X[2];
@@ -107,19 +122,26 @@ Eigen::Matrix<double, 4, 1> OutpostV2::getCenter(double append_delay) {
 
 double OutpostV2::getSafeSub(const double angle1, const double angle2) {
     double angle = angle1 - angle2;
-    while(angle > M_PI) angle -= 2 * M_PI;
-    while(angle < -M_PI) angle += 2 * M_PI;
+    while (angle > M_PI)
+        angle -= 2 * M_PI;
+    while (angle < -M_PI)
+        angle += 2 * M_PI;
     return angle;
 }
 
 double OutpostV2::getAngleTrans(const double target_angle, const double src_angle) {
     double dst_angle = src_angle;
-    while(getSafeSub(dst_angle, target_angle) > (M_PI / 3)) dst_angle -= (2 * M_PI) / 3;
-    while(getSafeSub(target_angle, dst_angle) > (M_PI / 3)) dst_angle += (2 * M_PI) / 3;
+    while (getSafeSub(dst_angle, target_angle) > (M_PI / 3))
+        dst_angle -= (2 * M_PI) / 3;
+    while (getSafeSub(target_angle, dst_angle) > (M_PI / 3))
+        dst_angle += (2 * M_PI) / 3;
 
-    if (dst_angle * target_angle >= 0) return dst_angle;
-    if      (dst_angle > (M_PI / 2))  dst_angle -= 2 * M_PI;
-    else if (dst_angle < (-M_PI / 2)) dst_angle += 2 * M_PI;
+    if (dst_angle * target_angle >= 0)
+        return dst_angle;
+    if (dst_angle > (M_PI / 2))
+        dst_angle -= 2 * M_PI;
+    else if (dst_angle < (-M_PI / 2))
+        dst_angle += 2 * M_PI;
     return dst_angle;
 }
 
@@ -148,8 +170,10 @@ bool OutpostV2::getFireArmor(const Eigen::Matrix<double, 4, 1>& pose) {
     double angle = getSafeSub(atan2(pose[1], pose[0]), pose[3]);
     double omega = model_.estimate_X[7];
 
-    if (fabs(omega) < (OUTPOST_OMEGA_V2 * 0.5)) return false;
-    if ((fabs(angle) < fire_angle_armor_) && (update_num_ > fire_update_)) return true;
+    if (fabs(omega) < (OUTPOST_OMEGA_V2 * 0.5))
+        return false;
+    if ((fabs(angle) < fire_angle_armor_) && (update_num_ > fire_update_))
+        return true;
     return false;
 }
 
@@ -157,42 +181,44 @@ bool OutpostV2::getFireCenter(const Eigen::Matrix<double, 4, 1>& pose) {
     double angle = getSafeSub(atan2(pose[1], pose[0]), pose[3]);
     double omega = model_.estimate_X[7];
 
-    if (fabs(omega) < (OUTPOST_OMEGA_V2 * 0.5)) return false;
-    if ((fabs(angle) < fire_angle_center_) && (update_num_ > fire_update_)) return true;
+    if (fabs(omega) < (OUTPOST_OMEGA_V2 * 0.5))
+        return false;
+    if ((fabs(angle) < fire_angle_center_) && (update_num_ > fire_update_))
+        return true;
     return false;
 }
 
 bool OutpostV2::isAngleTrans(const double target_angle, const double src_angle) {
     double differ_angle = fabs(getSafeSub(target_angle, src_angle));
-    if (differ_angle > (M_PI / 3)) return true;
-    else return false;
+    if (differ_angle > (M_PI / 3))
+        return true;
+    else
+        return false;
 }
 
-void OutpostV2::setMatrixQ(double q0, double q1, double q2, double q3, double q4, double q5, double q6, double q7) {
-    model_.Q << q0, 0, 0, 0, 0, 0, 0, 0,
-                0, q1, 0, 0, 0, 0, 0, 0,
-                0, 0, q2, 0, 0, 0, 0, 0,
-                0, 0, 0, q3, 0, 0, 0, 0,
-                0, 0, 0, 0, q4, 0, 0, 0,
-                0, 0, 0, 0, 0, q5, 0, 0,
-                0, 0, 0, 0, 0, 0, q6, 0,
-                0, 0, 0, 0, 0, 0, 0, q7;
+void OutpostV2::setMatrixQ(
+    double q0,
+    double q1,
+    double q2,
+    double q3,
+    double q4,
+    double q5,
+    double q6,
+    double q7
+) {
+    model_.Q << q0, 0, 0, 0, 0, 0, 0, 0, 0, q1, 0, 0, 0, 0, 0, 0, 0, 0, q2, 0, 0, 0, 0, 0, 0, 0, 0,
+        q3, 0, 0, 0, 0, 0, 0, 0, 0, q4, 0, 0, 0, 0, 0, 0, 0, 0, q5, 0, 0, 0, 0, 0, 0, 0, 0, q6, 0,
+        0, 0, 0, 0, 0, 0, 0, q7;
 }
 
 void OutpostV2::setMatrixR(double r0, double r1, double r2, double r3) {
-    model_.R << r0, 0, 0, 0,
-                0, r1, 0, 0,
-                0, 0, r2, 0,
-                0, 0, 0, r3;
+    model_.R << r0, 0, 0, 0, 0, r1, 0, 0, 0, 0, r2, 0, 0, 0, 0, r3;
 }
 
 void OutpostV2::setMatrixOmegaQ(double q0, double q1) {
-    omega_model_.Q << q0, 0,
-                      0, q1;
+    omega_model_.Q << q0, 0, 0, q1;
 }
 
 void OutpostV2::setMatrixOmegaR(double r0) {
     omega_model_.R << r0;
 }
-
-

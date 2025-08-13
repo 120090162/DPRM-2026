@@ -1,9 +1,24 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "solver/solvepnp.h"
-#include "solver/ternary.hpp"
-#include "utils/timer.h"
-#include "uniterm/uniterm.h"
-#include "structure/slidestd.hpp"
 #include <cmath>
+#include "solver/ternary.hpp"
+#include "structure/slidestd.hpp"
+#include "uniterm/uniterm.h"
+#include "utils/timer.h"
 using namespace rm;
 using namespace std;
 
@@ -21,7 +36,8 @@ double rm::solveYawPnP(
     bool display_flag
 ) {
     ret_pose = Eigen::Vector4d(0, 0, 0, 1);
-    if (camera == nullptr) return 0.0;
+    if (camera == nullptr)
+        return 0.0;
     YawPnP* yaw_pnp = new YawPnP();
 
     // 设置yaw
@@ -36,9 +52,16 @@ double rm::solveYawPnP(
     Eigen::Matrix3d rotate_pnp, rotate_world;
 
     // 使用OpenCV求解PnP
-    cv::solvePnP(object_points, image_points, 
-                 camera->intrinsic_matrix, camera->distortion_coeffs, 
-                 rvec, tvec, false, cv::SOLVEPNP_IPPE);
+    cv::solvePnP(
+        object_points,
+        image_points,
+        camera->intrinsic_matrix,
+        camera->distortion_coeffs,
+        rvec,
+        tvec,
+        false,
+        cv::SOLVEPNP_IPPE
+    );
 
     // 计算装甲板位姿，确定返回值
     Eigen::Matrix4d trans_pnp2head = camera->Trans_pnp2head;
@@ -107,54 +130,104 @@ void rm::displayYawPnP(YawPnP* yaw_pnp) {
         int angle_show_cost = (angle_cost_list[i] - min) / (max - min) * 500;
         int cost_show = (cost_list[i] - min) / (max - min) * 500;
 
-        cv::circle(img_cost, cv::Point(i * 2, 499 - pixel_show_cost), 1, cv::Scalar(0, 255, 255), 2);
-        cv::circle(img_cost, cv::Point(i * 2, 499 - angle_show_cost), 1, cv::Scalar(255, 255, 0), 2);
+        cv::circle(
+            img_cost,
+            cv::Point(i * 2, 499 - pixel_show_cost),
+            1,
+            cv::Scalar(0, 255, 255),
+            2
+        );
+        cv::circle(
+            img_cost,
+            cv::Point(i * 2, 499 - angle_show_cost),
+            1,
+            cv::Scalar(255, 255, 0),
+            2
+        );
     }
 
     double angle_yaw = yaw_pnp->getYawByAngleCost(-(M_PI / 2), (M_PI / 2), 0.03);
     double pixel_yaw = yaw_pnp->getYawByPixelCost(-(M_PI / 2), (M_PI / 2), 0.03);
     double append_yaw = yaw_pnp->getYawByMix(pixel_yaw, angle_yaw);
 
-    cv::line(img_cost, 
-        cv::Point((append_yaw + M_PI / 2) / M_PI * 500, 0), 
-        cv::Point((append_yaw + M_PI / 2) / M_PI * 500, 500), 
-        cv::Scalar(255, 255, 255), 2);
+    cv::line(
+        img_cost,
+        cv::Point((append_yaw + M_PI / 2) / M_PI * 500, 0),
+        cv::Point((append_yaw + M_PI / 2) / M_PI * 500, 500),
+        cv::Scalar(255, 255, 255),
+        2
+    );
 
     switch (yaw_pnp->elevation) {
         case rm::ARMOR_ELEVATION_UP_15:
-            cv::putText(img_cost, "UP15", cv::Point(20, 30), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255, 150, 0), 1);
+            cv::putText(
+                img_cost,
+                "UP15",
+                cv::Point(20, 30),
+                cv::FONT_HERSHEY_TRIPLEX,
+                1,
+                cv::Scalar(255, 150, 0),
+                1
+            );
             break;
         case rm::ARMOR_ELEVATION_UP_75:
-            cv::putText(img_cost, "UP75", cv::Point(20, 30), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255, 150, 0), 1);
+            cv::putText(
+                img_cost,
+                "UP75",
+                cv::Point(20, 30),
+                cv::FONT_HERSHEY_TRIPLEX,
+                1,
+                cv::Scalar(255, 150, 0),
+                1
+            );
             break;
         case rm::ARMOR_ELEVATION_DOWN_15:
-            cv::putText(img_cost, "DW15", cv::Point(20, 30), cv::FONT_HERSHEY_TRIPLEX, 1, cv::Scalar(255, 150, 0), 1);
+            cv::putText(
+                img_cost,
+                "DW15",
+                cv::Point(20, 30),
+                cv::FONT_HERSHEY_TRIPLEX,
+                1,
+                cv::Scalar(255, 150, 0),
+                1
+            );
             break;
     }
 
     for (int i = 1; i <= 7; i++) {
         int left_x = 250 - 250 * 0.2 * i / M_PI;
         int right_x = 250 + 250 * 0.2 * i / M_PI;
-        cv::line(img_cost, cv::Point(left_x, 486), cv::Point(left_x, 499), cv::Scalar(255, 255, 255), 1);
-        cv::line(img_cost, cv::Point(right_x, 486), cv::Point(right_x, 499), cv::Scalar(255, 255, 255), 1);
+        cv::line(
+            img_cost,
+            cv::Point(left_x, 486),
+            cv::Point(left_x, 499),
+            cv::Scalar(255, 255, 255),
+            1
+        );
+        cv::line(
+            img_cost,
+            cv::Point(right_x, 486),
+            cv::Point(right_x, 499),
+            cv::Scalar(255, 255, 255),
+            1
+        );
     }
     cv::line(img_cost, cv::Point(250, 483), cv::Point(250, 499), cv::Scalar(255, 255, 255), 2);
 
-    
     cv::imshow("cost", img_cost);
     cv::waitKey(1);
 }
 
-void YawPnP::setWorldPoints(const std::vector<cv::Point3f>& object_points) { 
+void YawPnP::setWorldPoints(const std::vector<cv::Point3f>& object_points) {
     P_world.clear();
-    for (const auto& p : object_points) {
+    for (const auto& p: object_points) {
         P_world.push_back(Eigen::Vector4d(0, -(p.x * 1e-3), -(p.y * 1e-3), 1));
     }
 }
 
-void YawPnP::setImagePoints(const std::vector<cv::Point2f>& image_points) { 
+void YawPnP::setImagePoints(const std::vector<cv::Point2f>& image_points) {
     P_pixel.clear();
-    for (const auto& p : image_points) {
+    for (const auto& p: image_points) {
         P_pixel.push_back(Eigen::Vector2d(p.x, p.y));
     }
 }
@@ -207,7 +280,7 @@ std::vector<Eigen::Vector4d> YawPnP::getMapping(double append_yaw) const {
 
     double yaw = sys_yaw + append_yaw;
     double pitch;
-    switch(elevation) {
+    switch (elevation) {
         case ARMOR_ELEVATION_UP_15:
             pitch = ANGLE_UP_15;
             break;
@@ -223,12 +296,10 @@ std::vector<Eigen::Vector4d> YawPnP::getMapping(double append_yaw) const {
     }
 
     pitch = -pitch;
-    M << cos(yaw) * cos(pitch), -sin(yaw), -sin(pitch) * cos(yaw), pose(0),
-         sin(yaw) * cos(pitch),  cos(yaw), -sin(pitch) * sin(yaw), pose(1),
-                    sin(pitch),         0,             cos(pitch), pose(2),
-                             0,         0,                      0,       1;
-    
-    for (const auto& p : P_world) {
+    M << cos(yaw) * cos(pitch), -sin(yaw), -sin(pitch) * cos(yaw), pose(0), sin(yaw) * cos(pitch),
+        cos(yaw), -sin(pitch) * sin(yaw), pose(1), sin(pitch), 0, cos(pitch), pose(2), 0, 0, 0, 1;
+
+    for (const auto& p: P_world) {
         P_mapping.push_back(M * p);
     }
     return P_mapping;
@@ -236,7 +307,7 @@ std::vector<Eigen::Vector4d> YawPnP::getMapping(double append_yaw) const {
 
 std::vector<Eigen::Vector2d> YawPnP::getProject(const std::vector<Eigen::Vector4d>& P_world) const {
     std::vector<Eigen::Vector2d> P_project;
-    for (const auto& p : P_world) {
+    for (const auto& p: P_world) {
         Eigen::Vector3d p_camera = (T_inv * p).head(3);
         Eigen::Vector3d p_project = Kc * p_camera;
         P_project.push_back(p_project.head(2) / p_camera(2));
@@ -245,9 +316,10 @@ std::vector<Eigen::Vector2d> YawPnP::getProject(const std::vector<Eigen::Vector4
 }
 
 double YawPnP::getCost(const std::vector<Eigen::Vector2d>& P_project, double append_yaw) const {
-    if (P_pixel.size() != P_project.size() || P_project.size() < 4) return 0.0;
-    
-    int map[4] = {0, 1, 3, 2};
+    if (P_pixel.size() != P_project.size() || P_project.size() < 4)
+        return 0.0;
+
+    int map[4] = { 0, 1, 3, 2 };
 
     double cost = 0.0;
     for (int i = 0; i < 4; i++) {
@@ -262,7 +334,6 @@ double YawPnP::getCost(const std::vector<Eigen::Vector2d>& P_project, double app
 
         double pixel_dist = (0.5 * (this_dist + next_dist) + line_dist) / pixel_line.norm();
 
-
         double cos_angle = pixel_line.dot(project_line) / (pixel_line.norm() * project_line.norm());
         double angle_dist = fabs(acos(cos_angle)) * ANGLE_COST_RATIO;
 
@@ -271,13 +342,15 @@ double YawPnP::getCost(const std::vector<Eigen::Vector2d>& P_project, double app
         cost += sqrt(cost_i);
     }
 
-    return cost; 
+    return cost;
 }
 
-double YawPnP::getPixelCost(const std::vector<Eigen::Vector2d>& P_project, double append_yaw) const {
-    if (P_pixel.size() != P_project.size() || P_project.size() < 4) return 0.0;
+double YawPnP::getPixelCost(const std::vector<Eigen::Vector2d>& P_project, double append_yaw)
+    const {
+    if (P_pixel.size() != P_project.size() || P_project.size() < 4)
+        return 0.0;
 
-    int map[4] = {0, 1, 3, 2};
+    int map[4] = { 0, 1, 3, 2 };
 
     double cost = 0.0;
     for (int i = 0; i < 4; i++) {
@@ -296,10 +369,12 @@ double YawPnP::getPixelCost(const std::vector<Eigen::Vector2d>& P_project, doubl
     return cost;
 }
 
-double YawPnP::getAngleCost(const std::vector<Eigen::Vector2d>& P_project, double append_yaw) const {
-    if (P_pixel.size() != P_project.size() || P_project.size() < 4) return 0.0;
+double YawPnP::getAngleCost(const std::vector<Eigen::Vector2d>& P_project, double append_yaw)
+    const {
+    if (P_pixel.size() != P_project.size() || P_project.size() < 4)
+        return 0.0;
 
-    int map[4] = {0, 1, 3, 2};
+    int map[4] = { 0, 1, 3, 2 };
 
     double cost = 0.0;
     for (int i = 0; i < 4; i++) {
@@ -374,7 +449,7 @@ double YawPnP::getYawByAngleCost(double left, double right, double epsilon) cons
 double YawPnP::getYawByMix(double pixel_yaw, double angle_yaw) const {
     double mid = 0.3;
     double len = 0.1;
-    
+
     double ratio = 0.5 + 0.5 * sin(M_PI * (fabs(pixel_yaw) - mid) / len);
     double append_yaw;
 

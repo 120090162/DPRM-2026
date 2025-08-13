@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "tensorrt/tensorrt.h"
 using namespace rm;
 
@@ -57,7 +72,7 @@ static void nms_member_init(
     top_move_from_input = ((float)infer_height * width_ratio - (float)input_height) / 2.f;
     left_move_from_input = ((float)infer_width * height_ratio - (float)input_width) / 2.f;
 
-	// 根据缩放比最大的边设置缩放比例
+    // 根据缩放比最大的边设置缩放比例
     if (width_ratio > height_ratio) {
         infer_to_input_ratio = width_ratio;
         left_move_from_input = 0;
@@ -120,14 +135,14 @@ static float nmstool_calcu_iou(cv::Rect box1, cv::Rect box2) {
 }
 
 // 筛选置信度并创建推理框对象
-static void nms_select_confidence(std::vector<std::vector<YoloRect>> &detection_class_list) {
+static void nms_select_confidence(std::vector<std::vector<YoloRect>>& detection_class_list) {
     // 遍历25200个yolov5推理结果
     for (int i = 0; i < output_bboxes_num; i++) {
         // 对bbox框内是否存在结果的置信度进行筛选
         if (output_buffer[i * yolo_size + 4] < confidence_threshold) {
             continue;
         }
-		
+
         // 使用结构体截断Raw数据，其float长度为：4+1+类别数
         yoloArmorRaw_V5C36* yolo_raw = (yoloArmorRaw_V5C36*)(output_buffer + i * yolo_size);
 
@@ -135,12 +150,13 @@ static void nms_select_confidence(std::vector<std::vector<YoloRect>> &detection_
         int class_index = -1;
         float class_confidence = 0;
         for (int i = 0; i < armor_classes_num; i++) {
-            if (yolo_raw->classes[i] > class_confidence && yolo_raw->classes[i] > confidence_threshold) {
+            if (yolo_raw->classes[i] > class_confidence
+                && yolo_raw->classes[i] > confidence_threshold) {
                 class_index = i;
                 class_confidence = yolo_raw->classes[i];
             }
         }
-        if(class_index == -1)
+        if (class_index == -1)
             continue;
 
         // 创建推理框结构体并赋值
@@ -149,13 +165,13 @@ static void nms_select_confidence(std::vector<std::vector<YoloRect>> &detection_
         detection_rect.class_id = class_index;
         detection_rect.box = nmstool_get_rect(yolo_raw);
 
-        // 将推理框按类别推入对应的vector中 
+        // 将推理框按类别推入对应的vector中
         detection_class_list[class_index].push_back(detection_rect);
     }
 }
 
 // 对每个类别的推理框vector，同类中按置信度排序
-static void nms_sort_confidence(std::vector<std::vector<YoloRect>> &detection_class_list) {
+static void nms_sort_confidence(std::vector<std::vector<YoloRect>>& detection_class_list) {
     // 遍历所有类别
     for (auto& detection_rect_list: detection_class_list) {
         if (detection_rect_list.size() <= 1) {
@@ -166,15 +182,13 @@ static void nms_sort_confidence(std::vector<std::vector<YoloRect>> &detection_cl
         std::sort(
             detection_rect_list.begin(),
             detection_rect_list.end(),
-            [](const YoloRect& a, const YoloRect& b) {
-                return a.confidence > b.confidence;
-            }
+            [](const YoloRect& a, const YoloRect& b) { return a.confidence > b.confidence; }
         );
     }
 }
 
 // 在同一个类别中进行nms
-static void nms_select_iou_single(std::vector<std::vector<YoloRect>> &detection_class_list) {
+static void nms_select_iou_single(std::vector<std::vector<YoloRect>>& detection_class_list) {
     // 创建保留的推理框vector，用于最后替换原推理框vector
     std::vector<YoloRect> retained_rect_list;
 
@@ -183,7 +197,7 @@ static void nms_select_iou_single(std::vector<std::vector<YoloRect>> &detection_
         if (detection_rect_list.size() <= 1) {
             continue;
         }
-        
+
         // 要被决定是否保留的关注框，从当前类别的第一个开始
         YoloRect focus_rect = detection_rect_list[0];
 
@@ -193,10 +207,10 @@ static void nms_select_iou_single(std::vector<std::vector<YoloRect>> &detection_
 
         // 对类内所有推理框进行遍历
         for (size_t focus_index = 1; focus_index < detection_rect_list.size(); focus_index++) {
-
             // 对所有保留框进行遍历
             bool avaliable_rect = true;
-            for (size_t retained_index = 0; retained_index < retained_rect_list.size(); retained_index++) {
+            for (size_t retained_index = 0; retained_index < retained_rect_list.size();
+                 retained_index++) {
                 // 计算当前遍历到的保留框和关注框的iou
                 float iou = nmstool_calcu_iou(
                     detection_rect_list[focus_index].box,
@@ -211,7 +225,7 @@ static void nms_select_iou_single(std::vector<std::vector<YoloRect>> &detection_
             }
 
             // 遍历结束后，标签仍为true，则该框可被保留
-            if(avaliable_rect) {
+            if (avaliable_rect) {
                 retained_rect_list.push_back(detection_rect_list[focus_index]);
             }
         }
@@ -223,7 +237,10 @@ static void nms_select_iou_single(std::vector<std::vector<YoloRect>> &detection_
 }
 
 // 对不同类间的推理框进行nms
-static void nms_select_iou_class(std::vector<std::vector<YoloRect>> &detection_class_list, std::vector<YoloRect> &result_rect_list) {
+static void nms_select_iou_class(
+    std::vector<std::vector<YoloRect>>& detection_class_list,
+    std::vector<YoloRect>& result_rect_list
+) {
     // 清空用于返回的推理框vector
     result_rect_list.clear();
 
@@ -232,10 +249,10 @@ static void nms_select_iou_class(std::vector<std::vector<YoloRect>> &detection_c
         if (detection_class_list[class_index].empty()) {
             continue;
         }
-        
+
         // 获取当前类的预选框数量，肯定会小于等于4，大于则说明错了
         size_t rect_list_size = detection_class_list[class_index].size();
-        if(rect_list_size > 4ull) {
+        if (rect_list_size > 4ull) {
             continue;
         }
 
@@ -249,7 +266,6 @@ static void nms_select_iou_class(std::vector<std::vector<YoloRect>> &detection_c
                 continue;
             }
 
-
             // 对返回框进行遍历
             bool avaliable_rect = true;
             for (size_t result_index = 0; result_index < result_rect_list.size(); result_index++) {
@@ -262,7 +278,7 @@ static void nms_select_iou_class(std::vector<std::vector<YoloRect>> &detection_c
 
                 // 对不同类的返回框和关注框计算iou
                 float iou = nmstool_calcu_iou(focus_rect.box, result_rect.box);
-                
+
                 // 如果iou超过阈值则比较两者的置信度，保留大的
                 if (iou > nms_threshold) {
                     if (focus_rect.confidence > result_rect.confidence) {
@@ -309,7 +325,7 @@ std::vector<YoloRect> rm::yoloArmorNMS_V5C36(
     // 初始化二维vector，第一层记录不同类，第二层是同类推理框
     std::vector<std::vector<YoloRect>> detection_class_list;
     detection_class_list.resize(armor_classes_num);
-    
+
     // 初始化用于返回的框
     std::vector<YoloRect> result_rect_list;
 

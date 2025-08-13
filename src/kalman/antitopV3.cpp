@@ -1,7 +1,22 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "kalman/interface/antitopV3.h"
-#include "utils/print.h"
-#include "uniterm/uniterm.h"
 #include <cmath>
+#include "uniterm/uniterm.h"
+#include "utils/print.h"
 using namespace std;
 using namespace rm;
 
@@ -22,10 +37,15 @@ AntitopV3::AntitopV3() {
     setCenterMatrixR(1, 1);
     setOmegaMatrixQ(1, 1, 1);
     setOmegaMatrixR(1);
-    weighted_z_ = new SlideWeightedAvg<double>[2]{500, 500};
+    weighted_z_ = new SlideWeightedAvg<double>[2] { 500, 500 };
 }
 
-AntitopV3::AntitopV3(double r_min, double r_max, int armor_num, bool enable_weighted) : r_min_(r_min), r_max_(r_max), armor_num_(armor_num), enable_weighted_(enable_weighted), model_() {
+AntitopV3::AntitopV3(double r_min, double r_max, int armor_num, bool enable_weighted):
+    r_min_(r_min),
+    r_max_(r_max),
+    armor_num_(armor_num),
+    enable_weighted_(enable_weighted),
+    model_() {
     t_ = getTime();
     setMatrixQ(0.01, 0.01, 0.01, 0.02, 0.05, 0.05, 0.0001, 0.04, 0.001);
     setMatrixR(0.1, 0.1, 0.1, 0.2);
@@ -33,12 +53,12 @@ AntitopV3::AntitopV3(double r_min, double r_max, int armor_num, bool enable_weig
     setCenterMatrixR(1, 1);
     setOmegaMatrixQ(1, 1, 1);
     setOmegaMatrixR(1);
-    weighted_z_ = new SlideWeightedAvg<double>[2]{500, 500};
+    weighted_z_ = new SlideWeightedAvg<double>[2] { 500, 500 };
 }
 
 void AntitopV3::push(const Eigen::Matrix<double, 4, 1>& pose, TimePoint t) {
     double dt = getDoubleOfS(t_, t);
-    if(dt > fire_delay_) {
+    if (dt > fire_delay_) {
         update_num_ = 0;
         model_.restart();
     }
@@ -63,18 +83,19 @@ void AntitopV3::push(const Eigen::Matrix<double, 4, 1>& pose, TimePoint t) {
 
     Eigen::Matrix<double, 1, 1> pose_theta(pose[3]);
     omega_model_.estimate_X[0] = getAngleTrans(
-        pose[3], 
-        omega_model_.estimate_X[0], 
-        omega_model_.estimate_X[0] + omega_model_.estimate_X[1] * dt);
+        pose[3],
+        omega_model_.estimate_X[0],
+        omega_model_.estimate_X[0] + omega_model_.estimate_X[1] * dt
+    );
     omega_funcA_.dt = dt;
     omega_model_.predict(omega_funcA_);
     omega_model_.update(omega_funcH_, pose_theta);
 
-
     model_.estimate_X[3] = getAngleTrans(
-        pose[3], 
+        pose[3],
         model_.estimate_X[3],
-        model_.estimate_X[3] + model_.estimate_X[7] * dt);
+        model_.estimate_X[3] + model_.estimate_X[7] * dt
+    );
     model_.estimate_X[2] = z_[toggle_];
     model_.estimate_X[8] = r_[toggle_];
 
@@ -113,10 +134,10 @@ Eigen::Matrix<double, 4, 1> AntitopV3::getPose(double append_delay) {
 
     double ekf_theta = model_.estimate_X[3] + model_.estimate_X[7] * dt;
     double kf_theta = omega_model_.estimate_X[0] + omega_model_.estimate_X[1] * dt;
-    
+
     double theta = getAngleMin(kf_theta, x_center, y_center);
     double r = r_[getToggle(theta, kf_theta)];
-    
+
     double z;
     if (enable_weighted_) {
         z = weighted_z_[getToggle(theta, kf_theta)].getAvg();
@@ -144,9 +165,9 @@ Eigen::Matrix<double, 4, 1> AntitopV3::getCenter(double append_delay) {
 
     double ekf_theta = model_.estimate_X[3] + model_.estimate_X[7] * dt;
     double kf_theta = omega_model_.estimate_X[0] + omega_model_.estimate_X[1] * dt;
-    
+
     double theta = getAngleMin(kf_theta, x_center, y_center);
-    
+
     double z;
     if (enable_weighted_) {
         z = weighted_z_[getToggle(theta, kf_theta)].getAvg();
@@ -165,27 +186,37 @@ Eigen::Matrix<double, 4, 1> AntitopV3::getCenter(double append_delay) {
 
 double AntitopV3::getSafeSub(const double angle1, const double angle2) {
     double angle = angle1 - angle2;
-    while(angle > M_PI) angle -= 2 * M_PI;
-    while(angle < -M_PI) angle += 2 * M_PI;
+    while (angle > M_PI)
+        angle -= 2 * M_PI;
+    while (angle < -M_PI)
+        angle += 2 * M_PI;
     return angle;
 }
 
 double AntitopV3::getAngleTrans(const double target_angle, const double src_angle) {
     double dst_angle = src_angle;
 
-    while(getSafeSub(dst_angle, target_angle) > (M_PI / armor_num_)) dst_angle -= (2 * M_PI) / armor_num_;
-    while(getSafeSub(target_angle, dst_angle) > (M_PI / armor_num_)) dst_angle += (2 * M_PI) / armor_num_;
+    while (getSafeSub(dst_angle, target_angle) > (M_PI / armor_num_))
+        dst_angle -= (2 * M_PI) / armor_num_;
+    while (getSafeSub(target_angle, dst_angle) > (M_PI / armor_num_))
+        dst_angle += (2 * M_PI) / armor_num_;
 
-    while(dst_angle > M_PI)  dst_angle -= 2 * M_PI;
-    while(dst_angle < -M_PI) dst_angle += 2 * M_PI;
+    while (dst_angle > M_PI)
+        dst_angle -= 2 * M_PI;
+    while (dst_angle < -M_PI)
+        dst_angle += 2 * M_PI;
 
-    if (dst_angle * target_angle >= 0) return dst_angle;
-    if      (dst_angle > (M_PI / 2))  dst_angle -= 2 * M_PI;
-    else if (dst_angle < (-M_PI / 2)) dst_angle += 2 * M_PI;
+    if (dst_angle * target_angle >= 0)
+        return dst_angle;
+    if (dst_angle > (M_PI / 2))
+        dst_angle -= 2 * M_PI;
+    else if (dst_angle < (-M_PI / 2))
+        dst_angle += 2 * M_PI;
     return dst_angle;
 }
 
-double AntitopV3::getAngleTrans(const double target_angle, const double src_angle, double refer_angle) {
+double
+AntitopV3::getAngleTrans(const double target_angle, const double src_angle, double refer_angle) {
     double dst_angle = src_angle;
 
     while (getSafeSub(refer_angle, target_angle) > (M_PI / armor_num_)) {
@@ -197,21 +228,27 @@ double AntitopV3::getAngleTrans(const double target_angle, const double src_angl
         dst_angle += (2 * M_PI) / armor_num_;
     }
 
-    while(dst_angle > M_PI)  dst_angle -= 2 * M_PI;
-    while(dst_angle < -M_PI) dst_angle += 2 * M_PI;
+    while (dst_angle > M_PI)
+        dst_angle -= 2 * M_PI;
+    while (dst_angle < -M_PI)
+        dst_angle += 2 * M_PI;
 
-    if (dst_angle * target_angle >= 0) return dst_angle;
-    if      (dst_angle > (M_PI / 2))  dst_angle -= 2 * M_PI;
-    else if (dst_angle < (-M_PI / 2)) dst_angle += 2 * M_PI;
+    if (dst_angle * target_angle >= 0)
+        return dst_angle;
+    if (dst_angle > (M_PI / 2))
+        dst_angle -= 2 * M_PI;
+    else if (dst_angle < (-M_PI / 2))
+        dst_angle += 2 * M_PI;
     return dst_angle;
 }
 
 bool AntitopV3::isAngleTrans(const double target_angle, const double src_angle) {
     double differ_angle = fabs(getSafeSub(target_angle, src_angle));
-    if (differ_angle > (M_PI / armor_num_)) return true;
-    else return false;
+    if (differ_angle > (M_PI / armor_num_))
+        return true;
+    else
+        return false;
 }
-
 
 double AntitopV3::getAngleMin(double armor_angle, const double x, const double y) {
     double center_angle = atan2(y, x);
@@ -219,10 +256,11 @@ double AntitopV3::getAngleMin(double armor_angle, const double x, const double y
 }
 
 int AntitopV3::getToggle(const double target_angle, const double src_angle) {
-    if (armor_num_ < 4) return 0;
+    if (armor_num_ < 4)
+        return 0;
     double differ_angle = fabs(getSafeSub(target_angle, src_angle));
     int differ_toggle = static_cast<int>(round(2 * differ_angle / M_PI)) % 2;
-    return (differ_toggle^toggle_);
+    return (differ_toggle ^ toggle_);
 }
 
 double AntitopV3::getWeightByTheta(const double theta) {
@@ -242,50 +280,47 @@ void AntitopV3::getStateStr(std::vector<std::string>& str) {
 
 bool AntitopV3::getFireArmor(const Eigen::Matrix<double, 4, 1>& pose) {
     double angle = getSafeSub(atan2(pose[1], pose[0]), pose[3]);
-    if ((fabs(angle) < fire_armor_angle_) && (update_num_ > fire_update_)) return true;
+    if ((fabs(angle) < fire_armor_angle_) && (update_num_ > fire_update_))
+        return true;
     return false;
 }
 
 bool AntitopV3::getFireCenter(const Eigen::Matrix<double, 4, 1>& pose) {
     double angle = getSafeSub(atan2(pose[1], pose[0]), pose[3]);
-    if ((fabs(angle) < fire_center_angle_) && (update_num_ > fire_update_)) return true;
+    if ((fabs(angle) < fire_center_angle_) && (update_num_ > fire_update_))
+        return true;
     return false;
 }
 
-void AntitopV3::setMatrixQ(double q0, double q1, double q2, double q3, double q4, double q5, double q6, double q7, double q8) {
-    model_.Q << q0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, q1, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, q2, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, q3, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, q4, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, q5, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, q6, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, q7, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, q8;
+void AntitopV3::setMatrixQ(
+    double q0,
+    double q1,
+    double q2,
+    double q3,
+    double q4,
+    double q5,
+    double q6,
+    double q7,
+    double q8
+) {
+    model_.Q << q0, 0, 0, 0, 0, 0, 0, 0, 0, 0, q1, 0, 0, 0, 0, 0, 0, 0, 0, 0, q2, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, q3, 0, 0, 0, 0, 0, 0, 0, 0, 0, q4, 0, 0, 0, 0, 0, 0, 0, 0, 0, q5, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, q6, 0, 0, 0, 0, 0, 0, 0, 0, 0, q7, 0, 0, 0, 0, 0, 0, 0, 0, 0, q8;
 }
 
 void AntitopV3::setMatrixR(double r0, double r1, double r2, double r3) {
-    model_.R << r0, 0, 0, 0,
-                0, r1, 0, 0,
-                0, 0, r2, 0,
-                0, 0, 0, r3;
+    model_.R << r0, 0, 0, 0, 0, r1, 0, 0, 0, 0, r2, 0, 0, 0, 0, r3;
 }
 
 void AntitopV3::setCenterMatrixQ(double q0, double q1, double q2, double q3) {
-    center_model_.Q <<  q0, 0, 0, 0,
-                        0, q1, 0, 0,
-                        0, 0, q2, 0,
-                        0, 0, 0, q3;
+    center_model_.Q << q0, 0, 0, 0, 0, q1, 0, 0, 0, 0, q2, 0, 0, 0, 0, q3;
 }
 void AntitopV3::setCenterMatrixR(double r0, double r1) {
-    center_model_.R << r0, 0,
-                       0, r1;
+    center_model_.R << r0, 0, 0, r1;
 }
 
 void AntitopV3::setOmegaMatrixQ(double q0, double q1, double q2) {
-    omega_model_.Q << q0, 0, 0,
-                      0, q1, 0,
-                      0, 0, q2;
+    omega_model_.Q << q0, 0, 0, 0, q1, 0, 0, 0, q2;
 }
 
 void AntitopV3::setOmegaMatrixR(double r0) {

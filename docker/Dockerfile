@@ -31,7 +31,7 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
 # update system apt sources
-RUN apt update \ 
+RUN apt update \
     && apt install wget python3-yaml python3-distro -y
 RUN echo "chooses:" > fish_install.yaml \
     && echo "- {choose: 1, desc: '一键安装(推荐):ROS(支持ROS/ROS2,树莓派Jetson)'}" >> fish_install.yaml \

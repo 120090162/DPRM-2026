@@ -158,7 +158,7 @@ sudo ./run.sh -t
       # example
       python scripts/visualize_model_mujoco.py kuavo.yaml
       ```
-      
+
 * Run HLIP+CIMPC algorithm in drake/mujoco+drake
 
   * drake
@@ -172,10 +172,11 @@ sudo ./run.sh -t
 
       ```bash
       # example
-      python demo/mujoco/achilles/main_walk.py 
+      python demo/mujoco/achilles/main_walk.py
 
 # 学习记录
 [tensorrt使用](https://github.com/wdhao/tensorrtCV.git)
+[yolov5迁移](https://github.com/wang-xinyu/tensorrtx/tree/trt10)
 [yolov5训练](https://github.com/Spphire/YOLOarmor-2022final)
 [上交自瞄参考1](https://github.com/Harry-hhj/CVRM2021-sjtu)
 [上交自瞄参考2](https://github.com/julyfun/rm.cv.fans)
@@ -184,3 +185,21 @@ sudo ./run.sh -t
 
 [数据集](https://github.com/zRzRzRzRzRzRzR/YOLO-of-RoboMaster-Keypoints-Detection-2023)
 [博客](https://sjtu-robomaster-team.github.io/)
+
+# 代码风格
+* 使用`pre-commit`来保证可维护性
+参考: https://blog.csdn.net/sexyluna/article/details/132002248
+```bash
+# install
+pip install pre-commit
+# 安装pre-commit脚本 (runs every time you commit in git)
+pre-commit install
+# or run
+pre-commit run --all-files
+```
+* 使用`clang-format`和`clang-tidy`来维护cpp代码的风格
+参考: https://blog.csdn.net/weixin_43721070/article/details/122638851
+```bash
+sudo apt install clang-format
+sudo apt install clang-tidy
+```

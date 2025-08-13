@@ -1,27 +1,42 @@
-#include "video/video.h"
-#include "uniterm/uniterm.h"
-#include <iostream>
-#include <vector>
-#include <iostream>
-#include <fstream>
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <dirent.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
+#include <fcntl.h>
 #include <linux/videodev2.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <opencv2/opencv.hpp>
+#include <unistd.h>
 #include <cstdint>
-#include <thread>
+#include <fstream>
+#include <iostream>
 #include <memory>
+#include <opencv2/opencv.hpp>
+#include <thread>
+#include <vector>
+#include "uniterm/uniterm.h"
+#include "video/video.h"
 
 static void capture_thread(rm::Camera* camera, rm::Locate* locate_ptr, int fps) {
     int delay = 1000.0 / static_cast<double>(fps);
     TimePoint last_time = getTime();
     while (true) {
         int sleep_time = delay - static_cast<int>(getNumOfMs(last_time, getTime()));
-        if (sleep_time > 0) std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        if (sleep_time > 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         last_time = getTime();
 
         struct v4l2_buffer buffer;
@@ -37,13 +52,14 @@ static void capture_thread(rm::Camera* camera, rm::Locate* locate_ptr, int fps) 
         }
 
         std::shared_ptr<rm::Frame> frame = std::make_shared<rm::Frame>();
-        cv::Mat image_yuv = cv::Mat(camera->height, camera->width, CV_8UC2, camera->capture_buffer[buffer.index]);
+        cv::Mat image_yuv =
+            cv::Mat(camera->height, camera->width, CV_8UC2, camera->capture_buffer[buffer.index]);
         cv::Mat image_bgr;
-        
+
         if (ioctl(camera->file_descriptor, VIDIOC_QBUF, &buffer) < 0) {
             continue;
         }
-        
+
         try {
             cv::cvtColor(image_yuv, image_bgr, cv::COLOR_YUV2BGR_YUYV);
         } catch (const cv::Exception& e) {
@@ -61,7 +77,7 @@ static void capture_thread(rm::Camera* camera, rm::Locate* locate_ptr, int fps) 
         frame->height = camera->height;
         frame->locate = locate;
         frame->image = std::make_shared<cv::Mat>(image_bgr);
-        
+
         camera->buffer->push(frame);
     }
 }
@@ -134,14 +150,19 @@ bool rm::listUVC(std::vector<std::string>& device_list, std::string base_name) {
     return true;
 }
 
-
-bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsigned int fps, unsigned int buffer_num, std::string device_name) {
+bool rm::openUVC(
+    Camera* camera,
+    unsigned int width,
+    unsigned int height,
+    unsigned int fps,
+    unsigned int buffer_num,
+    std::string device_name
+) {
     if (camera == nullptr) {
         rm::message("Video UVC error at nullptr camera", rm::MSG_ERROR);
         return false;
     }
-    
-    
+
     // 打开视频设备文件
     const char* chname = device_name.c_str();
     int fd = open(chname, O_RDWR);
@@ -152,7 +173,7 @@ bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsign
     }
 
     // 设置摄像头的参数
-    struct v4l2_format format = {0};
+    struct v4l2_format format = { 0 };
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     format.fmt.pix.width = width;
     format.fmt.pix.height = height;
@@ -193,7 +214,7 @@ bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsign
     struct v4l2_buffer mapbuffer;
     mapbuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    for(uint32_t i = 0; i < camera->capture_buffer_num; i++) {
+    for (uint32_t i = 0; i < camera->capture_buffer_num; i++) {
         mapbuffer.index = i;
         if (ioctl(fd, VIDIOC_QUERYBUF, &mapbuffer) < 0) {
             rm::message("Video UVC error querying buffer: " + device_name, rm::MSG_ERROR);
@@ -203,7 +224,14 @@ bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsign
             return false;
         }
 
-        camera->capture_buffer[i] = (uint8_t*)mmap(NULL, mapbuffer.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mapbuffer.m.offset);
+        camera->capture_buffer[i] = (uint8_t*)mmap(
+            NULL,
+            mapbuffer.length,
+            PROT_READ | PROT_WRITE,
+            MAP_SHARED,
+            fd,
+            mapbuffer.m.offset
+        );
         camera->capture_buffer_size[i] = mapbuffer.length;
 
         if (ioctl(fd, VIDIOC_QBUF, &mapbuffer) < 0) {
@@ -226,14 +254,14 @@ bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsign
         delete camera->buffer;
     }
     camera->buffer = new rm::SwapBuffer<rm::Frame>();
-    
+
     int temp_id = 0;
     int start_index = device_name.length() - 1;
-    while(start_index >= 0 && std::isdigit(device_name[start_index])) {
+    while (start_index >= 0 && std::isdigit(device_name[start_index])) {
         temp_id = temp_id * 10 + (device_name[start_index] - '0');
         --start_index;
     }
-    
+
     camera->camera_id = 0;
     while (temp_id > 0) {
         camera->camera_id = camera->camera_id * 10 + temp_id % 10;
@@ -246,7 +274,7 @@ bool rm::openUVC(Camera *camera, unsigned int width, unsigned int height, unsign
 }
 
 bool rm::setUVC(
-    Camera *camera,
+    Camera* camera,
     int exposure,
     int brightness,
     int contrast,
@@ -255,7 +283,7 @@ bool rm::setUVC(
     int sharpness,
     int backlight
 ) {
-    struct v4l2_control ctrl; 
+    struct v4l2_control ctrl;
     ctrl.id = V4L2_CID_EXPOSURE_AUTO;
     ctrl.value = V4L2_EXPOSURE_MANUAL;
     if (ioctl(camera->file_descriptor, VIDIOC_S_CTRL, &ctrl) < 0) {
@@ -322,7 +350,7 @@ bool rm::setUVC(
     return true;
 }
 
-bool rm::runUVC(Camera *camera, Locate* locate_ptr, int fps) {
+bool rm::runUVC(Camera* camera, Locate* locate_ptr, int fps) {
     if (camera == nullptr) {
         rm::message("Video UVC error at nullptr camera", rm::MSG_ERROR);
         return false;
@@ -342,7 +370,7 @@ bool rm::runUVC(Camera *camera, Locate* locate_ptr, int fps) {
     return true;
 }
 
-bool rm::closeUVC(Camera *camera) {
+bool rm::closeUVC(Camera* camera) {
     if (camera == nullptr) {
         rm::message("Video UVC error at nullptr camera", rm::MSG_ERROR);
         return false;

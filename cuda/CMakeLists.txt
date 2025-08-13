@@ -20,7 +20,7 @@ include_directories(${CMAKE_SOURCE_DIR}/cuda/include)
 
 # 编译为链接库
 cuda_add_library(openrm_cudatools
-    STATIC 
+    STATIC
         ${SOURCES}
 )
 

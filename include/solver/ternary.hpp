@@ -21,5 +21,5 @@ double ternarySearch(double left, double right, const T& func, double epsilon) {
     return (left + right) / 2;
 }
 
-}
+} // namespace rm
 #endif

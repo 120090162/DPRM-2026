@@ -1,6 +1,21 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <vector>
 #include "pointer/pointer.h"
 #include "uniterm/uniterm.h"
-#include <vector>
 
 using namespace rm;
 
@@ -14,16 +29,18 @@ const static int real_armor_sw = 135;
 const static int real_armor_sh = 125;
 
 const static int real_armor_bw = 230;
-const static int real_armor_bh = 127; 
+const static int real_armor_bh = 127;
 
 void rm::initReprojection(
-    double real_point_sw, double real_point_sh,
-    double real_point_bw, double real_point_bh,
+    double real_point_sw,
+    double real_point_sh,
+    double real_point_bw,
+    double real_point_bh,
     std::string small_path,
     std::string big_path
 ) {
     small_decal = cv::imread(small_path, cv::IMREAD_COLOR);
-    if(big_path.size() == 0) {
+    if (big_path.size() == 0) {
         big_decal = small_decal;
     } else {
         big_decal = cv::imread(big_path, cv::IMREAD_COLOR);
@@ -36,10 +53,11 @@ void rm::initReprojection(
 }
 
 void rm::paramReprojection(
-    double real_point_sw, double real_point_sh,
-    double real_point_bw, double real_point_bh
+    double real_point_sw,
+    double real_point_sh,
+    double real_point_bw,
+    double real_point_bh
 ) {
-
     int pixel_armor_sw = small_decal.cols;
     int pixel_armor_sh = small_decal.rows;
 
@@ -53,29 +71,72 @@ void rm::paramReprojection(
     int pixel_point_bh = (real_point_bh / real_armor_bh) * pixel_armor_bh;
 
     small_decal_points.clear();
-    small_decal_points.emplace_back(pixel_armor_sw/2 - pixel_point_sw/2, pixel_armor_sh/2 - pixel_point_sh/2);
-    small_decal_points.emplace_back(pixel_armor_sw/2 + pixel_point_sw/2, pixel_armor_sh/2 - pixel_point_sh/2);
-    small_decal_points.emplace_back(pixel_armor_sw/2 - pixel_point_sw/2, pixel_armor_sh/2 + pixel_point_sh/2);
-    small_decal_points.emplace_back(pixel_armor_sw/2 + pixel_point_sw/2, pixel_armor_sh/2 + pixel_point_sh/2);
+    small_decal_points.emplace_back(
+        pixel_armor_sw / 2 - pixel_point_sw / 2,
+        pixel_armor_sh / 2 - pixel_point_sh / 2
+    );
+    small_decal_points.emplace_back(
+        pixel_armor_sw / 2 + pixel_point_sw / 2,
+        pixel_armor_sh / 2 - pixel_point_sh / 2
+    );
+    small_decal_points.emplace_back(
+        pixel_armor_sw / 2 - pixel_point_sw / 2,
+        pixel_armor_sh / 2 + pixel_point_sh / 2
+    );
+    small_decal_points.emplace_back(
+        pixel_armor_sw / 2 + pixel_point_sw / 2,
+        pixel_armor_sh / 2 + pixel_point_sh / 2
+    );
 
     big_decal_points.clear();
-    big_decal_points.emplace_back(pixel_armor_bw/2 - pixel_point_bw/2, pixel_armor_bh/2 - pixel_point_bh/2);
-    big_decal_points.emplace_back(pixel_armor_bw/2 + pixel_point_bw/2, pixel_armor_bh/2 - pixel_point_bh/2);
-    big_decal_points.emplace_back(pixel_armor_bw/2 - pixel_point_bw/2, pixel_armor_bh/2 + pixel_point_bh/2);
-    big_decal_points.emplace_back(pixel_armor_bw/2 + pixel_point_bw/2, pixel_armor_bh/2 + pixel_point_bh/2);
-
+    big_decal_points.emplace_back(
+        pixel_armor_bw / 2 - pixel_point_bw / 2,
+        pixel_armor_bh / 2 - pixel_point_bh / 2
+    );
+    big_decal_points.emplace_back(
+        pixel_armor_bw / 2 + pixel_point_bw / 2,
+        pixel_armor_bh / 2 - pixel_point_bh / 2
+    );
+    big_decal_points.emplace_back(
+        pixel_armor_bw / 2 - pixel_point_bw / 2,
+        pixel_armor_bh / 2 + pixel_point_bh / 2
+    );
+    big_decal_points.emplace_back(
+        pixel_armor_bw / 2 + pixel_point_bw / 2,
+        pixel_armor_bh / 2 + pixel_point_bh / 2
+    );
 }
 
-void rm::setReprojection(const cv::Mat& src, cv::Mat& dst, std::vector<cv::Point2f> four_points, rm::ArmorSize size) {
-    if(four_points.size() != 4) return;
+void rm::setReprojection(
+    const cv::Mat& src,
+    cv::Mat& dst,
+    std::vector<cv::Point2f> four_points,
+    rm::ArmorSize size
+) {
+    if (four_points.size() != 4)
+        return;
     cv::Mat copy = src.clone();
 
-    if(size == rm::ARMOR_SIZE_SMALL_ARMOR) {
+    if (size == rm::ARMOR_SIZE_SMALL_ARMOR) {
         cv::Mat small_trans_matrix = cv::getPerspectiveTransform(small_decal_points, four_points);
-        cv::warpPerspective(small_decal, copy, small_trans_matrix, copy.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
+        cv::warpPerspective(
+            small_decal,
+            copy,
+            small_trans_matrix,
+            copy.size(),
+            cv::INTER_LINEAR,
+            cv::BORDER_TRANSPARENT
+        );
     } else if (size == rm::ARMOR_SIZE_BIG_ARMOR) {
         cv::Mat big_trans_matrix = cv::getPerspectiveTransform(big_decal_points, four_points);
-        cv::warpPerspective(big_decal, copy, big_trans_matrix, copy.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
+        cv::warpPerspective(
+            big_decal,
+            copy,
+            big_trans_matrix,
+            copy.size(),
+            cv::INTER_LINEAR,
+            cv::BORDER_TRANSPARENT
+        );
     }
 
     cv::Mat mask, mask_inv;
@@ -85,6 +146,6 @@ void rm::setReprojection(const cv::Mat& src, cv::Mat& dst, std::vector<cv::Point
     cv::Mat background, foreground;
     cv::bitwise_and(src, src, background, mask_inv);
     cv::bitwise_and(copy, copy, foreground, mask);
-    
+
     cv::add(background, foreground, dst);
 }

@@ -1,11 +1,26 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "kalman/interface/trackqueueV4.h"
-#include <iostream>
-#include <memory>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <memory>
 
-#include "utils/print.h"
 #include "uniterm/uniterm.h"
+#include "utils/print.h"
 
 using namespace rm;
 using namespace std;
@@ -30,28 +45,29 @@ void TrackQueueV4::push(Eigen::Matrix<double, 4, 1>& input_pose, TimePoint t) {
 
     double min_distance = 1e4;
     TQstateV4* best_state = nullptr;
-    
-    for(auto it = list_.begin(); it != list_.end();) {
 
+    for (auto it = list_.begin(); it != list_.end();) {
         TQstateV4* state = *it;
         double dt = getDoubleOfS(state->last_t, t);
 
-        if((dt > delay_) || (state->keep <= 0)) {
-            
-            if(last_state_ == state) last_state_ = nullptr;
+        if ((dt > delay_) || (state->keep <= 0)) {
+            if (last_state_ == state)
+                last_state_ = nullptr;
             delete *it;
             it = list_.erase(it);
         } else {
-            ++it; 
-            double predict_x = state->model->estimate_X[0] + dt * state->model->estimate_X[3] * cos(state->model->estimate_X[5]);
-            double predict_y = state->model->estimate_X[1] + dt * state->model->estimate_X[3] * sin(state->model->estimate_X[5]);
+            ++it;
+            double predict_x = state->model->estimate_X[0]
+                + dt * state->model->estimate_X[3] * cos(state->model->estimate_X[5]);
+            double predict_y = state->model->estimate_X[1]
+                + dt * state->model->estimate_X[3] * sin(state->model->estimate_X[5]);
             double predict_z = state->model->estimate_X[2];
 
             Eigen::Matrix<double, 3, 1> predict_pose;
             predict_pose << predict_x, predict_y, predict_z, 1;
 
             double distance = getDistance(pose, predict_pose);
-            if(distance < min_distance) {
+            if (distance < min_distance) {
                 min_distance = distance;
                 best_state = state;
             }
@@ -79,35 +95,34 @@ void TrackQueueV4::push(Eigen::Matrix<double, 4, 1>& input_pose, TimePoint t) {
 
 void TrackQueueV4::update() {
     std::unique_lock<std::mutex> lock(mtx_);
-    for(auto it = list_.begin(); it != list_.end(); ++it) {
+    for (auto it = list_.begin(); it != list_.end(); ++it) {
         (*it)->keep -= 1;
     }
 }
 
 void TrackQueueV4::setMatrixQ(
-        double q1, double q2, double q3, double q4, 
-        double q5, double q6, double q7, double q8
+    double q1,
+    double q2,
+    double q3,
+    double q4,
+    double q5,
+    double q6,
+    double q7,
+    double q8
 ) {
-    matrixQ_ << q1, 0, 0, 0, 0, 0, 0, 0,
-                0, q2, 0, 0, 0, 0, 0, 0,
-                0, 0, q3, 0, 0, 0, 0, 0,
-                0, 0, 0, q4, 0, 0, 0, 0,
-                0, 0, 0, 0, q5, 0, 0, 0,
-                0, 0, 0, 0, 0, q6, 0, 0,
-                0, 0, 0, 0, 0, 0, q7, 0,
-                0, 0, 0, 0, 0, 0, 0, q8;
+    matrixQ_ << q1, 0, 0, 0, 0, 0, 0, 0, 0, q2, 0, 0, 0, 0, 0, 0, 0, 0, q3, 0, 0, 0, 0, 0, 0, 0, 0,
+        q4, 0, 0, 0, 0, 0, 0, 0, 0, q5, 0, 0, 0, 0, 0, 0, 0, 0, q6, 0, 0, 0, 0, 0, 0, 0, 0, q7, 0,
+        0, 0, 0, 0, 0, 0, 0, q8;
 }
 
 void TrackQueueV4::setMatrixR(double r1, double r2, double r3) {
-    matrixR_ << r1, 0, 0,
-                0, r2, 0,
-                0, 0, r3;
+    matrixR_ << r1, 0, 0, 0, r2, 0, 0, 0, r3;
 }
 
 void TrackQueueV4::getStateStr(std::vector<std::string>& str) {
     str.push_back("TrackQueueV4:");
     str.push_back(" ");
-    for(size_t i = 0; i < list_.size(); i++) {
+    for (size_t i = 0; i < list_.size(); i++) {
         str.push_back("Track " + to_string(i) + ":");
         str.push_back(" count: " + to_string(list_[i]->count));
         str.push_back(" keep: " + to_string(list_[i]->keep));
@@ -119,38 +134,40 @@ Eigen::Matrix<double, 4, 1> TrackQueueV4::getPose(double append_delay) {
     std::unique_lock<std::mutex> lock(mtx_);
 
     TQstateV4* state = nullptr;
-    if(last_state_ != nullptr) {
+    if (last_state_ != nullptr) {
         double dt = getDoubleOfS(last_state_->last_t, getTime());
-        if((dt < delay_) && (last_state_->keep >= 0)) {
+        if ((dt < delay_) && (last_state_->keep >= 0)) {
             state = last_state_;
         } else {
             last_state_ = nullptr;
         }
-    } 
+    }
 
     if (last_state_ == nullptr) {
         int max_count = -1;
-        for(auto it = list_.begin(); it != list_.end(); ++it) {
-
+        for (auto it = list_.begin(); it != list_.end(); ++it) {
             double dt = getDoubleOfS((*it)->last_t, getTime());
-            if((dt > delay_) || ((*it)->keep <= 0)) continue;
+            if ((dt > delay_) || ((*it)->keep <= 0))
+                continue;
 
-            if((*it)->count > max_count) {
+            if ((*it)->count > max_count) {
                 max_count = (*it)->count;
                 state = *it;
             }
         }
     }
 
-    if(state != nullptr) {
+    if (state != nullptr) {
         last_state_ = state;
 
         double sys_delay = getDoubleOfS(state->last_t, getTime());
         double dt = sys_delay + append_delay;
-        double x = state->model->estimate_X[0] + dt * state->model->estimate_X[3] * cos(state->model->estimate_X[5]);
-        double y = state->model->estimate_X[1] + dt * state->model->estimate_X[3] * sin(state->model->estimate_X[5]);
+        double x = state->model->estimate_X[0]
+            + dt * state->model->estimate_X[3] * cos(state->model->estimate_X[5]);
+        double y = state->model->estimate_X[1]
+            + dt * state->model->estimate_X[3] * sin(state->model->estimate_X[5]);
         double z = state->model->estimate_X[2] + dt * state->model->estimate_X[4];
-    
+
         return Eigen::Matrix<double, 4, 1>(x, y, z, 0);
     } else {
         return Eigen::Matrix<double, 4, 1>::Zero();
@@ -162,33 +179,32 @@ bool TrackQueueV4::getPose(Eigen::Matrix<double, 4, 1>& pose, TimePoint& t) {
 
     std::vector<TQstateV4*> available_state;
 
-    for(auto it = list_.begin(); it != list_.end(); ++it) {
-
+    for (auto it = list_.begin(); it != list_.end(); ++it) {
         double dt = getDoubleOfS((*it)->last_t, getTime());
-        if((dt > delay_) || ((*it)->keep <= 0)) continue;
+        if ((dt > delay_) || ((*it)->keep <= 0))
+            continue;
 
-        if((*it)->available) {
+        if ((*it)->available) {
             (*it)->available = false;
-            if((*it)->count > 2) available_state.push_back(*it);
+            if ((*it)->count > 2)
+                available_state.push_back(*it);
         }
     }
 
-    if(available_state.size() == 0) {
-        pose =  Eigen::Matrix<double, 4, 1>::Zero();
+    if (available_state.size() == 0) {
+        pose = Eigen::Matrix<double, 4, 1>::Zero();
         t = getTime();
         return false;
 
-    } else if(available_state.size() == 1) {
+    } else if (available_state.size() == 1) {
         pose = available_state[0]->last_pose;
         t = available_state[0]->last_t;
         return true;
     }
-    
-    std::sort(available_state.begin(), available_state.end(), 
-        [](TQstateV4* a, TQstateV4* b) {
-            return a->count > b->count;
-        }
-    );
+
+    std::sort(available_state.begin(), available_state.end(), [](TQstateV4* a, TQstateV4* b) {
+        return a->count > b->count;
+    });
 
     pose = available_state[0]->last_pose;
     t = available_state[0]->last_t;
@@ -196,7 +212,10 @@ bool TrackQueueV4::getPose(Eigen::Matrix<double, 4, 1>& pose, TimePoint& t) {
     return true;
 }
 
-double TrackQueueV4::getDistance(const Eigen::Matrix<double, 4, 1>& this_pose, const Eigen::Matrix<double, 4, 1>& last_pose) {
+double TrackQueueV4::getDistance(
+    const Eigen::Matrix<double, 4, 1>& this_pose,
+    const Eigen::Matrix<double, 4, 1>& last_pose
+) {
     double dx = this_pose(0) - last_pose(0);
     double dy = this_pose(1) - last_pose(1);
     double dz = this_pose(2) - last_pose(2);
@@ -204,7 +223,10 @@ double TrackQueueV4::getDistance(const Eigen::Matrix<double, 4, 1>& this_pose, c
     return d;
 }
 
-double TrackQueueV4::getDistance(const Eigen::Matrix<double, 3, 1>& this_pose, const Eigen::Matrix<double, 3, 1>& last_pose) {
+double TrackQueueV4::getDistance(
+    const Eigen::Matrix<double, 3, 1>& this_pose,
+    const Eigen::Matrix<double, 3, 1>& last_pose
+) {
     double dx = this_pose(0) - last_pose(0);
     double dy = this_pose(1) - last_pose(1);
     double dz = this_pose(2) - last_pose(2);
@@ -213,8 +235,11 @@ double TrackQueueV4::getDistance(const Eigen::Matrix<double, 3, 1>& this_pose, c
 }
 
 bool TrackQueueV4::getFireFlag() {
-    if(last_state_ == nullptr) return false;
+    if (last_state_ == nullptr)
+        return false;
     double dt = getDoubleOfS(last_state_->last_t, getTime());
-    if((last_state_->count > count_) && (dt < delay_)) return true;
-    else return false;
+    if ((last_state_->count > count_) && (dt < delay_))
+        return true;
+    else
+        return false;
 }

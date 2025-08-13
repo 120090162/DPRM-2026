@@ -22,18 +22,18 @@ install_opencv () {
           echo "Detected GCC version $GCC_MAJOR_VERSION, which is too new for Jetson Nano CUDA compatibility."
           echo "OpenCV will fail to compile with this version."
           echo ""
-    
+
           if [ -x /usr/bin/gcc-8 ] && [ -x /usr/bin/g++-8 ]; then
               echo "GCC 8 is available on your system."
-    
+
               printf "Do you want to temporarily switch to GCC 8 for this installation (Y/n)? "
               read confirm_switch
-    
+
               if [[ "$confirm_switch" != "${confirm_switch#[Nn]}" ]]; then
               echo "Aborting installation as requested."
               exit 1
               fi
-    
+
               echo "Switching to GCC 8..."
               sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
               sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
@@ -64,15 +64,15 @@ install_opencv () {
       echo "Error: /proc/device-tree/model not found. Are you sure this is a Jetson Nano?"
       exit 1
   fi
-  
+
   echo "Installing OpenCV 4.10.0 on your Nano"
   echo "It will take 3.5 hours !"
-  
+
   # reveal the CUDA location
   cd ~
   sudo sh -c "echo '/usr/local/cuda/lib64' >> /etc/ld.so.conf.d/nvidia-tegra.conf"
   sudo ldconfig
-  
+
   # install the Jetson Nano dependencies first
   if [[ $model == *"Jetson Nano"* ]]; then
     sudo apt-get install -y build-essential git unzip pkg-config zlib1g-dev
@@ -82,7 +82,7 @@ install_opencv () {
     sudo apt-get install -y libgstreamer-plugins-good1.0-dev
     sudo apt-get install -y libtbb2 libgtk-3-dev libxine2-dev
   fi
-  
+
   if [ -f /etc/os-release ]; then
       # Source the /etc/os-release file to get variables
       . /etc/os-release
@@ -116,17 +116,17 @@ install_opencv () {
   sudo apt-get install -y liblapack-dev liblapacke-dev libeigen3-dev gfortran
   sudo apt-get install -y libhdf5-dev libprotobuf-dev protobuf-compiler
   sudo apt-get install -y libgoogle-glog-dev libgflags-dev
- 
+
   # remove old versions or previous builds
-  cd ~ 
+  cd ~
   sudo rm -rf opencv*
   # download the latest version
-  wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip 
-  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip 
-  
+  wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip
+  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip
+
   # unpack
-  unzip opencv.zip 
-  unzip opencv_contrib.zip 
+  unzip opencv.zip
+  unzip opencv_contrib.zip
 
   # Some administration to make life easier later on
   mv opencv-4.10.0 opencv
@@ -136,7 +136,7 @@ install_opencv () {
   cd ~/opencv
   mkdir build
   cd build
-  
+
   # run cmake
   cmake -D CMAKE_BUILD_TYPE=RELEASE \
   -D CMAKE_INSTALL_PREFIX=/usr/local/opencv4.10.0 \
@@ -172,16 +172,16 @@ install_opencv () {
   -D BUILD_EXAMPLES=OFF \
   -D CMAKE_CXX_FLAGS="-march=native -mtune=native" \
   -D CMAKE_C_FLAGS="-march=native -mtune=native" ..
- 
-  make -j ${NO_JOB} 
-  
+
+  make -j ${NO_JOB}
+
   sudo make install
   sudo ldconfig
-  
+
   # cleaning (frees 320 MB)
   make clean
   sudo apt-get update
-  
+
   echo "Congratulations!"
   echo "You've successfully installed OpenCV 4.10.0 on your Nano"
 }
@@ -193,11 +193,11 @@ if [ -d ~/opencv/build ]; then
   echo "You have a directory ~/opencv/build on your disk."
   echo "Continuing the installation will replace this folder."
   echo " "
-  
+
   printf "Do you wish to continue (Y/n)?"
   read answer
 
-  if [ "$answer" != "${answer#[Nn]}" ] ;then 
+  if [ "$answer" != "${answer#[Nn]}" ] ;then
       echo "Leaving without installing OpenCV"
   else
       install_opencv

@@ -1,15 +1,25 @@
-#include "utils/tf.h"
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <cmath>
+#include "utils/tf.h"
 using namespace rm;
 using namespace std;
 
-void rm::tf_trans_pnp2cam(
-    Eigen::Matrix<double, 4, 4>& matrix_trans
-) {
-    matrix_trans << 0,      0,      0.001, 0,
-                    -0.001, 0,      0,     0, 
-                    0,      -0.001, 0,     0, 
-                    0,      0,      0,     1;
+void rm::tf_trans_pnp2cam(Eigen::Matrix<double, 4, 4>& matrix_trans) {
+    matrix_trans << 0, 0, 0.001, 0, -0.001, 0, 0, 0, 0, -0.001, 0, 0, 0, 0, 0, 1;
 }
 
 void rm::tf_trans_pnp2cam(
@@ -24,7 +34,6 @@ void rm::tf_trans_pnp2cam(
 
     vec = matrix_trans * vec;
     pose_cam << vec(0), vec(1), vec(2), pose_cam(3);
-
 }
 
 void rm::tf_trans_cam2head(
@@ -39,25 +48,16 @@ void rm::tf_trans_cam2head(
     Eigen::Matrix<double, 4, 4> rotate_cam_yaw, rotate_cam_pitch, rotate_cam_roll;
     Eigen::Matrix<double, 4, 4> trans_cam;
 
-    rotate_cam_yaw << cos(cam_yaw), -sin(cam_yaw), 0, 0,
-                      sin(cam_yaw),  cos(cam_yaw), 0, 0,
-                                 0,             0, 1, 0,
-                                 0,             0, 0, 1;
-    
-    rotate_cam_pitch << cos(cam_pitch), 0, -sin(cam_pitch), 0,
-                                     0, 1,               0, 0,
-                        sin(cam_pitch), 0,  cos(cam_pitch), 0,
-                                     0, 0,               0, 1; 
-    
-    rotate_cam_roll << 1, 0,              0,             0,
-                       0, cos(cam_roll), -sin(cam_roll), 0,
-                       0, sin(cam_roll),  cos(cam_roll), 0,
-                       0, 0,              0,             1;
+    rotate_cam_yaw << cos(cam_yaw), -sin(cam_yaw), 0, 0, sin(cam_yaw), cos(cam_yaw), 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 1;
 
-    trans_cam << 1, 0, 0, cam_dx,
-                 0, 1, 0, cam_dy,
-                 0, 0, 1, cam_dz,
-                 0, 0, 0, 1;
+    rotate_cam_pitch << cos(cam_pitch), 0, -sin(cam_pitch), 0, 0, 1, 0, 0, sin(cam_pitch), 0,
+        cos(cam_pitch), 0, 0, 0, 0, 1;
+
+    rotate_cam_roll << 1, 0, 0, 0, 0, cos(cam_roll), -sin(cam_roll), 0, 0, sin(cam_roll),
+        cos(cam_roll), 0, 0, 0, 0, 1;
+
+    trans_cam << 1, 0, 0, cam_dx, 0, 1, 0, cam_dy, 0, 0, 1, cam_dz, 0, 0, 0, 1;
 
     matrix_trans = trans_cam * rotate_cam_yaw * rotate_cam_pitch * rotate_cam_roll;
 }
@@ -81,7 +81,6 @@ void rm::tf_trans_cam2head(
     vec = matrix_trans * vec;
     pose_head << vec(0), vec(1), vec(2), pose_cam(3);
 }
-
 
 void rm::tf_trans_pnp2head(
     Eigen::Matrix<double, 4, 4>& matrix_trans,
@@ -130,15 +129,11 @@ void tf_trans_barrel2head(
     vec << barrel_dx, barrel_dy, barrel_dz, 1;
 
     Eigen::Matrix<double, 4, 4> rotate_yaw, rotate_pitch;
-    rotate_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0,
-                  sin(barrel_yaw),  cos(barrel_yaw), 0, 0,
-                                0,                0, 1, 0,
-                                0,                0, 0, 1;
-    
-    rotate_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0,
-                                    0, 1,                  0, 0,
-                    sin(barrel_pitch), 0,  cos(barrel_pitch), 0,
-                                    0, 0,                  0, 1;
+    rotate_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0, sin(barrel_yaw), cos(barrel_yaw), 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 1;
+
+    rotate_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0, 0, 1, 0, 0, sin(barrel_pitch), 0,
+        cos(barrel_pitch), 0, 0, 0, 0, 1;
     pose_head = rotate_yaw * rotate_pitch * vec;
 }
 
@@ -160,26 +155,17 @@ void tf_trans_barrel2axis(
     Eigen::Matrix<double, 4, 4> rotate_barrel_yaw, rotate_barrel_pitch, rotate_pitch;
     Eigen::Matrix<double, 4, 4> trans_head;
 
-    rotate_pitch << cos(pitch), 0, -sin(pitch), 0,
-                             0, 1,           0, 0,
-                    sin(pitch), 0,  cos(pitch), 0,
-                             0, 0,           0, 1;
-    
-    rotate_barrel_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0,
-                         sin(barrel_yaw),  cos(barrel_yaw), 0, 0,
-                                       0,                0, 1, 0,
-                                       0,                0, 0, 1;
+    rotate_pitch << cos(pitch), 0, -sin(pitch), 0, 0, 1, 0, 0, sin(pitch), 0, cos(pitch), 0, 0, 0,
+        0, 1;
 
-    rotate_barrel_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0,
-                                           0, 1,                  0, 0,
-                           sin(barrel_pitch), 0,  cos(barrel_pitch), 0,
-                                           0, 0,                  0, 1;
+    rotate_barrel_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0, sin(barrel_yaw), cos(barrel_yaw),
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-    trans_head << 1, 0, 0, head_dx,
-                  0, 1, 0, head_dy,
-                  0, 0, 1, head_dz,
-                  0, 0, 0, 1;
-    
+    rotate_barrel_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0, 0, 1, 0, 0,
+        sin(barrel_pitch), 0, cos(barrel_pitch), 0, 0, 0, 0, 1;
+
+    trans_head << 1, 0, 0, head_dx, 0, 1, 0, head_dy, 0, 0, 1, head_dz, 0, 0, 0, 1;
+
     pose_axis = trans_head * rotate_pitch * rotate_barrel_yaw * rotate_barrel_pitch * vec;
 }
 
@@ -203,35 +189,22 @@ void tf_trans_barrel2world(
     Eigen::Matrix<double, 4, 4> rotate_yaw, rotate_pitch;
     Eigen::Matrix<double, 4, 4> trans_head;
 
-    rotate_yaw << cos(yaw), -sin(yaw), 0, 0,
-                  sin(yaw),  cos(yaw), 0, 0,
-                         0,         0, 1, 0,
-                         0,         0, 0, 1;
+    rotate_yaw << cos(yaw), -sin(yaw), 0, 0, sin(yaw), cos(yaw), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-    rotate_pitch << cos(pitch), 0, -sin(pitch), 0,
-                             0, 1,           0, 0,
-                    sin(pitch), 0,  cos(pitch), 0,
-                             0, 0,           0, 1;
-    
-    rotate_barrel_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0,
-                         sin(barrel_yaw),  cos(barrel_yaw), 0, 0,
-                                       0,                0, 1, 0,
-                                       0,                0, 0, 1;
+    rotate_pitch << cos(pitch), 0, -sin(pitch), 0, 0, 1, 0, 0, sin(pitch), 0, cos(pitch), 0, 0, 0,
+        0, 1;
 
-    rotate_barrel_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0,
-                                           0, 1,                  0, 0,
-                           sin(barrel_pitch), 0,  cos(barrel_pitch), 0,
-                                           0, 0,                  0, 1;
+    rotate_barrel_yaw << cos(barrel_yaw), -sin(barrel_yaw), 0, 0, sin(barrel_yaw), cos(barrel_yaw),
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-    trans_head << 1, 0, 0, head_dx,
-                  0, 1, 0, head_dy,
-                  0, 0, 1, head_dz,
-                  0, 0, 0, 1;
-    
-    pose_world = rotate_yaw * trans_head * rotate_pitch * rotate_barrel_yaw * rotate_barrel_pitch * vec;
+    rotate_barrel_pitch << cos(barrel_pitch), 0, -sin(barrel_pitch), 0, 0, 1, 0, 0,
+        sin(barrel_pitch), 0, cos(barrel_pitch), 0, 0, 0, 0, 1;
 
+    trans_head << 1, 0, 0, head_dx, 0, 1, 0, head_dy, 0, 0, 1, head_dz, 0, 0, 0, 1;
+
+    pose_world =
+        rotate_yaw * trans_head * rotate_pitch * rotate_barrel_yaw * rotate_barrel_pitch * vec;
 }
-
 
 void rm::tf_trans_head2world(
     Eigen::Matrix<double, 4, 4>& matrix_trans,
@@ -240,15 +213,10 @@ void rm::tf_trans_head2world(
 ) {
     Eigen::Matrix<double, 4, 4> rotate_yaw, rotate_pitch;
 
-    rotate_yaw << cos(yaw), -sin(yaw), 0, 0,
-                  sin(yaw),  cos(yaw), 0, 0,
-                         0,         0, 1, 0,
-                         0,         0, 0, 1;
-    
-    rotate_pitch << cos(pitch), 0, -sin(pitch), 0,
-                             0, 1,           0, 0,
-                    sin(pitch), 0,  cos(pitch), 0,
-                             0, 0,           0, 1;
+    rotate_yaw << cos(yaw), -sin(yaw), 0, 0, sin(yaw), cos(yaw), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
+
+    rotate_pitch << cos(pitch), 0, -sin(pitch), 0, 0, 1, 0, 0, sin(pitch), 0, cos(pitch), 0, 0, 0,
+        0, 1;
 
     matrix_trans = rotate_yaw * rotate_pitch;
 }
@@ -277,20 +245,12 @@ void rm::tf_trans_head2world(
 ) {
     Eigen::Matrix<double, 4, 4> rotate_yaw, rotate_pitch, rotate_roll;
 
-    rotate_yaw << cos(yaw), -sin(yaw), 0, 0,
-                  sin(yaw),  cos(yaw), 0, 0,
-                         0,         0, 1, 0,
-                         0,         0, 0, 1;
-    
-    rotate_pitch << cos(pitch), 0, -sin(pitch), 0,
-                             0, 1,           0, 0,
-                    sin(pitch), 0,  cos(pitch), 0,
-                             0, 0,           0, 1;
+    rotate_yaw << cos(yaw), -sin(yaw), 0, 0, sin(yaw), cos(yaw), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-    rotate_roll << 1, 0,          0,         0,
-                   0, cos(roll), -sin(roll), 0,
-                   0, sin(roll),  cos(roll), 0,
-                   0, 0,          0,         1;
+    rotate_pitch << cos(pitch), 0, -sin(pitch), 0, 0, 1, 0, 0, sin(pitch), 0, cos(pitch), 0, 0, 0,
+        0, 1;
+
+    rotate_roll << 1, 0, 0, 0, 0, cos(roll), -sin(roll), 0, 0, sin(roll), cos(roll), 0, 0, 0, 0, 1;
 
     matrix_trans = rotate_roll * rotate_yaw * rotate_pitch;
 }
@@ -322,24 +282,15 @@ void rm::tf_trans_head2world(
 ) {
     Eigen::Matrix<double, 4, 4> rotate_yaw, rotate_pitch, trans_head;
 
-    rotate_yaw << cos(yaw), -sin(yaw), 0, 0,
-                  sin(yaw),  cos(yaw), 0, 0,
-                         0,         0, 1, 0,
-                         0,         0, 0, 1;
-    
-    rotate_pitch << cos(pitch), 0, -sin(pitch), 0,
-                             0, 1,           0, 0,
-                    sin(pitch), 0,  cos(pitch), 0,
-                             0, 0,           0, 1;
+    rotate_yaw << cos(yaw), -sin(yaw), 0, 0, sin(yaw), cos(yaw), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-    trans_head << 1, 0, 0, head_dx,
-                  0, 1, 0, head_dy,
-                  0, 0, 1, head_dz,
-                  0, 0, 0, 1;
+    rotate_pitch << cos(pitch), 0, -sin(pitch), 0, 0, 1, 0, 0, sin(pitch), 0, cos(pitch), 0, 0, 0,
+        0, 1;
+
+    trans_head << 1, 0, 0, head_dx, 0, 1, 0, head_dy, 0, 0, 1, head_dz, 0, 0, 0, 1;
 
     matrix_trans = rotate_yaw * trans_head * rotate_pitch;
 }
-
 
 void rm::tf_trans_head2world(
     const Eigen::Matrix<double, 4, 1>& pose_head,
@@ -367,8 +318,5 @@ void rm::tf_trans_single_yaw(
     const double dy,
     const double dz
 ) {
-    matrix << cos(yaw), -sin(yaw), 0, dx,
-              sin(yaw),  cos(yaw), 0, dy,
-                     0,         0, 1, dz,
-                     0,         0, 0, 1;
+    matrix << cos(yaw), -sin(yaw), 0, dx, sin(yaw), cos(yaw), 0, dy, 0, 0, 1, dz, 0, 0, 0, 1;
 }

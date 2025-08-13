@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_OUTPOST_V2_H__
 #define __OPENRM_KALMAN_INTERFACE_OUTPOST_V2_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
-#include <structure/slidestd.hpp>
+#include <utils/timer.h>
 #include <algorithm>
+#include <structure/slidestd.hpp>
 
 // [ x, y, z, theta, vx, vy, vz, omega ]  [ x, y, z, theta]
 // [ 0, 1, 2,   3,   4,  5,  6,    7   ]  [ 0, 1, 2,   3  ]
@@ -12,11 +27,10 @@
 // [ theta, omega ]   [ theta ]
 // [   0  ,   1   ]   [   0   ]
 
-namespace rm  {
+namespace rm {
 
 constexpr double OUTPOST_OMEGA_V2 = 0.8 * M_PI;
 constexpr double OUTPOST_R_V2 = 0.2765;
-
 
 struct OutpostV2_FuncA {
     template<class T>
@@ -25,10 +39,6 @@ struct OutpostV2_FuncA {
         x1[1] = x0[1] + dt * x0[5];
         x1[2] = x0[2] + dt * x0[6];
         x1[3] = x0[3] + dt * x0[7];
-        x1[4] = x0[4];
-        x1[5] = x0[5];
-        x1[6] = x0[6];
-        x1[7] = x0[7];
     }
     double dt;
 };
@@ -60,9 +70,7 @@ struct OutpostV2_OmegaFuncH {
     }
 };
 
-
 class OutpostV2 {
-
 public:
     OutpostV2();
     ~OutpostV2() {}
@@ -82,30 +90,30 @@ public:
         fire_angle_center_ = center_angle;
     }
 
-    double getOmega() { return model_.estimate_X[7];};
-    void   getStateStr(std::vector<std::string>& str); 
-    bool   getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
-    bool   getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
+    double getOmega() {
+        return model_.estimate_X[7];
+    };
+    void getStateStr(std::vector<std::string>& str);
+    bool getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
+    bool getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
 
 private:
-    double getSafeSub(const double, const double);                  // 安全减法
-    double getAngleTrans(const double, const double);               // 将模型内角度转换为接近新角度
-    double getAngleMin(const double, const double, const double);   // 获取角度最小值
-    int    getToggle(const double, const double);                   // 获取切换标签
-    bool   isAngleTrans(const double, const double);                // 根据角度确定是否发生切换
+    double getSafeSub(const double, const double); // 安全减法
+    double getAngleTrans(const double, const double); // 将模型内角度转换为接近新角度
+    double getAngleMin(const double, const double, const double); // 获取角度最小值
+    int getToggle(const double, const double); // 获取切换标签
+    bool isAngleTrans(const double, const double); // 根据角度确定是否发生切换
 
-
-    int    fire_update_ = 100;
+    int fire_update_ = 100;
     double fire_delay_ = 1.5;
     double fire_angle_armor_ = 0.2;
     double fire_angle_center_ = 0.2;
 
-
     int toggle_ = 0;
     int update_num_ = 0;
 
-    EKF<8, 4>       model_;
-    KF<2, 1>        omega_model_;
+    EKF<8, 4> model_;
+    KF<2, 1> omega_model_;
 
     OutpostV2_FuncA funcA_;
     OutpostV2_FuncH funcH_;
@@ -117,12 +125,6 @@ private:
     SlideAvg<double> omega_;
 };
 
-
-}
-
-
-
-
-
+} // namespace rm
 
 #endif

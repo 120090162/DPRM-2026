@@ -1,18 +1,33 @@
-#include "pointer/pointer.h"
-#include <cmath>
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <algorithm>
+#include <cmath>
+#include "pointer/pointer.h"
 
 using namespace rm;
 using namespace std;
 
 static cv::Point2f getBarycenter(const cv::Mat& gray, const cv::Point center, int radius) {
     // 计算圆形区域的遍历范围
-    
+
     int x_min = max(center.x - radius, 0);
     int x_max = min(center.x + radius, gray.cols - 1);
     int y_min = max(center.y - radius, 0);
     int y_max = min(center.y + radius, gray.rows - 1);
-    
+
     // 计算圆形区域的灰度和像素坐标
     int gray_sum = 0;
     cv::Point2f pixel_sum = cv::Point2f(0, 0);
@@ -27,8 +42,12 @@ static cv::Point2f getBarycenter(const cv::Mat& gray, const cv::Point center, in
     return pixel_sum / gray_sum;
 }
 
-PointPair rm::findPointPairBarycenter(Lightbar lightbar, const cv::Mat& gray, double extend_dist, double radius_ratio) {
-
+PointPair rm::findPointPairBarycenter(
+    Lightbar lightbar,
+    const cv::Mat& gray,
+    double extend_dist,
+    double radius_ratio
+) {
     // 找到灯条的中心点
     cv::Point2f center = lightbar.rect.center;
 
@@ -58,7 +77,7 @@ PointPair rm::findPointPairBarycenter(Lightbar lightbar, const cv::Mat& gray, do
     cv::Point end_point0, end_point1;
     double min_dist0 = 1e5, min_dist1 = 1e5;
 
-    for(auto point : lightbar.contour) {
+    for (auto point: lightbar.contour) {
         double dist0 = cv::norm(far_point0 - point);
         double dist1 = cv::norm(far_point1 - point);
         if (dist0 < min_dist0) {
@@ -72,31 +91,30 @@ PointPair rm::findPointPairBarycenter(Lightbar lightbar, const cv::Mat& gray, do
     }
 
     int radius = (int)(radius_ratio * cv::norm(end_point0 - end_point1));
-    
+
     // 计算两个端点的质心
     cv::Point2f first_barycenter = getBarycenter(gray, end_point0, radius);
     cv::Point2f second_barycenter = getBarycenter(gray, end_point1, radius);
 
     // 保证第一个点在上面，第二个点在下面
-    if(first_barycenter.y > second_barycenter.y) {
+    if (first_barycenter.y > second_barycenter.y) {
         swap(first_barycenter, second_barycenter);
     }
     return PointPair(first_barycenter, second_barycenter);
 }
 
-
-
 void rm::findCircleCenterFromContours(
     const std::vector<std::vector<cv::Point>>& contours,
     std::vector<cv::Point2f>& circles,
-    double area_threshold, double circularity_threshold
+    double area_threshold,
+    double circularity_threshold
 ) {
     circles.clear();
     for (size_t i = 0; i < contours.size(); i++) {
-
         // 面积筛选
         double area = cv::contourArea(contours[i]);
-        if (area > area_threshold) continue;
+        if (area > area_threshold)
+            continue;
 
         // 计算最小外接圆
         float radius;
@@ -105,7 +123,8 @@ void rm::findCircleCenterFromContours(
 
         // 圆度筛选
         double circularity = area / (M_PI * pow((double)radius, 2));
-        if (circularity < circularity_threshold) continue;
+        if (circularity < circularity_threshold)
+            continue;
 
         circles.push_back(center);
     }

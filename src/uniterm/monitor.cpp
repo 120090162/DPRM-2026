@@ -1,10 +1,25 @@
-#include "uniterm/uniterm.h"
-#include "structure/shm.hpp"
-#include <thread>
-#include <chrono>
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <curses.h>
+#include <chrono>
 #include <string>
+#include <thread>
 #include <vector>
+#include "structure/shm.hpp"
+#include "uniterm/uniterm.h"
 
 void rm::monitor(std::vector<std::string>& key_name) {
     std::vector<MsgImg*> msg_img(key_name.size(), nullptr);
@@ -12,8 +27,8 @@ void rm::monitor(std::vector<std::string>& key_name) {
         std::string img_shm_name = ImgMsgShmKey + key_name[i];
         msg_img[i] = SharedMemory<MsgImg>(img_shm_name, ImgShmLen);
     }
-    
-    while(true) {
+
+    while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
         erase();
         int rows, cols;
@@ -38,7 +53,7 @@ void rm::monitor(std::vector<std::string>& key_name) {
                         mvprintw(up, x, "-");
                         mvprintw(down, x, "-");
                     }
-                    
+
                     mvprintw(up - 1, left, str.c_str());
 
                 } else if (msg.type[0] == 'p') {

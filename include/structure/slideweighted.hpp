@@ -1,17 +1,16 @@
 #ifndef __OPENRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
 #define __OPENRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
-#include <deque>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <deque>
 
-namespace rm{
+namespace rm {
 
 template<typename T>
 class SlideWeightedAvg {
-
 public:
-    SlideWeightedAvg() : size_((size_t)20) {}
-    SlideWeightedAvg(int size) : size_((size_t)size) {}
+    SlideWeightedAvg(): size_((size_t)20) {}
+    SlideWeightedAvg(int size): size_((size_t)size) {}
     ~SlideWeightedAvg() {}
 
     void push(T value, T weight) {
@@ -30,8 +29,12 @@ public:
         weight_sum_ += weight;
         avg_ = sum_ / weight_sum_;
     }
-    T getAvg() {return avg_;};
-    size_t getSize() {return values_.size();};
+    T getAvg() {
+        return avg_;
+    };
+    size_t getSize() {
+        return values_.size();
+    };
     void clear() {
         values_.clear();
         weights_.clear();
@@ -47,9 +50,8 @@ private:
     T sum_ = (T)0;
     T weight_sum_ = (T)0;
     T avg_ = (T)0;
-
 };
 
-}
+} // namespace rm
 
 #endif

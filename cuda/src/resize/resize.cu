@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "resize.cuh"
 
 void rm::resize(
@@ -17,7 +32,7 @@ void rm::resize(
     int jobs = dst_width * dst_height;
     int threads = 256;
     int blocks = ceil(jobs / (float)threads);
-    
+
     // 启动核函数
     warpaffine_kernel<<<blocks, threads, 0, cuda_stream>>>(
         src,

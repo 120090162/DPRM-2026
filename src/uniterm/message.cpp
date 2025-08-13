@@ -1,8 +1,23 @@
-#include "uniterm/uniterm.h"
-#include <map>
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <iostream>
-#include <vector>
+#include <map>
 #include <structure/shm.hpp>
+#include <vector>
+#include "uniterm/uniterm.h"
 
 std::string rm::NumMsgShmKey = "KeyNum_";
 std::string rm::StrMsgShmKey = "KeyStr_";
@@ -44,7 +59,7 @@ void rm::message(const std::string& name, float mf) {
     MsgNum msg;
     msg.num.f = mf;
     msg.type = 'f';
-    message(name, msg);  
+    message(name, msg);
 }
 void rm::message(const std::string& name, double md) {
     MsgNum msg;
@@ -71,9 +86,11 @@ void rm::message(const std::string& name, MsgNum msg) {
 void rm::message(const std::string& mstr, MSG type) {
     MsgStr msg;
     msg.type = static_cast<char>(type);
-    if (type == rm::MSG_ERROR) std::cerr << mstr << std::endl;
-    else std::cout << mstr << std::endl;
-    
+    if (type == rm::MSG_ERROR)
+        std::cerr << mstr << std::endl;
+    else
+        std::cout << mstr << std::endl;
+
     size_t length = mstr.length();
     size_t copy_length = std::min(length, static_cast<size_t>(62));
 
@@ -103,7 +120,12 @@ void rm::message(const std::string& info, int img_width, int img_height, cv::Rec
     ImgVec[ImgIndex++] = msg;
 }
 
-void rm::message(const std::string& info, int img_width, int img_height, std::vector<cv::Point2f> four_points) {
+void rm::message(
+    const std::string& info,
+    int img_width,
+    int img_height,
+    std::vector<cv::Point2f> four_points
+) {
     MsgImg msg;
     size_t length = info.length();
     size_t copy_length = std::min(length, static_cast<size_t>(30));
@@ -112,7 +134,8 @@ void rm::message(const std::string& info, int img_width, int img_height, std::ve
     msg.str[copy_length] = '\0';
 
     msg.type[0] = 'p';
-    if (four_points.size() < 4) return;
+    if (four_points.size() < 4)
+        return;
 
     for (size_t i = 0; i < 4; i++) {
         msg.rect[i * 2] = four_points[i].x / img_width;
@@ -139,8 +162,9 @@ void rm::message(const std::string& info, int img_width, int img_height, cv::Poi
 
 void rm::message_send() {
     size_t index = 0ull;
-    for (const auto& msgpair : MsgMap) {
-        if(index >= NumShmLen) break;
+    for (const auto& msgpair: MsgMap) {
+        if (index >= NumShmLen)
+            break;
         shm_num[index++] = msgpair.second;
     }
 

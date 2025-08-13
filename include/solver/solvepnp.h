@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_SOLVER_SOLVEPNP_H__
 #define __OPENRM_SOLVER_SOLVEPNP_H__
-#include <structure/enums.hpp>
-#include <structure/camera.hpp>
-#include <opencv2/opencv.hpp>
-#include <Eigen/Core>
 #include <utils/tf.h>
+#include <Eigen/Core>
+#include <opencv2/opencv.hpp>
+#include <structure/camera.hpp>
+#include <structure/enums.hpp>
 
 namespace rm {
 
@@ -18,7 +33,7 @@ constexpr double ANGLE_BOUNDARY_DOWN = 0;
 class YawPnP {
 public:
     YawPnP() {}
-    YawPnP(ArmorElevation elevation) : elevation(elevation) {}
+    YawPnP(ArmorElevation elevation): elevation(elevation) {}
 
     void setWorldPoints(const std::vector<cv::Point3f>& object_points);
     void setImagePoints(const std::vector<cv::Point2f>& image_points);
@@ -41,19 +56,17 @@ public:
     double getYawByAngleCost(double left, double right, double epsilon) const;
     double getYawByMix(double pixel_yaw, double angle_yaw) const;
 
-
-    double          sys_yaw;
+    double sys_yaw;
     Eigen::Vector4d pose;
-    ArmorElevation  elevation;
+    ArmorElevation elevation;
 
-    std::vector<Eigen::Vector2d> P_pixel;      // 四点真实像素坐标
-    std::vector<Eigen::Vector4d> P_world;      // 四点正对世界坐标
+    std::vector<Eigen::Vector2d> P_pixel; // 四点真实像素坐标
+    std::vector<Eigen::Vector4d> P_world; // 四点正对世界坐标
 
-    Eigen::Matrix3d Kc;                        // 相机内参矩阵
-    Eigen::Matrix4d T;                         // 图像坐标系在陀螺仪坐标系下的表示
-    Eigen::Matrix4d T_inv;                     // 陀螺仪坐标系在图像坐标系下的表示
+    Eigen::Matrix3d Kc; // 相机内参矩阵
+    Eigen::Matrix4d T; // 图像坐标系在陀螺仪坐标系下的表示
+    Eigen::Matrix4d T_inv; // 陀螺仪坐标系在图像坐标系下的表示
 };
-
 
 double solveYawPnP(
     const double yaw,
@@ -64,10 +77,11 @@ double solveYawPnP(
     const Eigen::Matrix3d& rotate_head2world,
     const Eigen::Matrix4d& trans_head2world,
     rm::ArmorID armor_id = rm::ARMOR_ID_UNKNOWN,
-    bool display_flag = false);
+    bool display_flag = false
+);
 
 void displayYawPnP(YawPnP* yaw_pnp);
 
-}
+} // namespace rm
 
 #endif

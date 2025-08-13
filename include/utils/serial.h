@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_SERIAL_SERIAL_H__
 #define __OPENRM_SERIAL_SERIAL_H__
 
+#include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
-#include <cstring>
-#include <cstdint>
 #include "utils/timer.h"
 
 namespace rm {
@@ -34,20 +49,21 @@ enum SerialStatus {
     SERIAL_STATUS_LENGTH_ERROR
 };
 
-SerialStatus getSerialPortList(std::vector<std::string>& port_list, SerialType type = SERIAL_TYPE_TTY_USB);
+SerialStatus
+getSerialPortList(std::vector<std::string>& port_list, SerialType type = SERIAL_TYPE_TTY_USB);
 SerialStatus closeSerialPort(int file_descriptor);
 SerialStatus openSerialPort(
-    int& file_descriptor, 
-    std::string name, 
-    int baudrate = 115200, 
+    int& file_descriptor,
+    std::string name,
+    int baudrate = 115200,
     char parity_bit = 'N',
     int data_bit = 8,
     int stop_bit = 1
 );
 SerialStatus restartSerialPort(
-    int& file_descriptor, 
-    std::string name, 
-    int baudrate = 115200, 
+    int& file_descriptor,
+    std::string name,
+    int baudrate = 115200,
     char parity_bit = 'N',
     int data_bit = 8,
     int stop_bit = 1
@@ -58,7 +74,7 @@ SerialStatus readFromSerialPort(
     int& file_descriptor,
     bool restart = false,
     std::string name = "/dev/ttyUSB0",
-    int baudrate = 115200, 
+    int baudrate = 115200,
     char parity_bit = 'N',
     int data_bit = 8,
     int stop_bit = 1
@@ -68,19 +84,15 @@ SerialStatus writeToSerialPort(
     unsigned int length,
     int& file_descriptor,
     bool restart = false,
-    std::string name = "/dev/ttyUSB0", 
-    int baudrate = 115200, 
+    std::string name = "/dev/ttyUSB0",
+    int baudrate = 115200,
     char parity_bit = 'N',
     int data_bit = 8,
     int stop_bit = 1
 );
 
-SerialStatus initSerialHead(
-    int& file_descriptor,
-    size_t struct_size,
-    const unsigned char sof = 0xA5
-);
+SerialStatus
+initSerialHead(int& file_descriptor, size_t struct_size, const unsigned char sof = 0xA5);
 
-
-}
+} // namespace rm
 #endif

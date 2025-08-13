@@ -1,11 +1,26 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_OUTPOST_V1_H__
 #define __OPENRM_KALMAN_INTERFACE_OUTPOST_V1_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
+#include <utils/timer.h>
+#include <algorithm>
 #include <structure/slidestd.hpp>
 #include <structure/slideweighted.hpp>
-#include <algorithm>
 
 // [ x, y, z, theta， omega ]  [ x, y, z, theta]
 // [ 0, 1, 2,   3,      4   ]  [ 0, 1, 2,   3  ]
@@ -13,11 +28,10 @@
 // [ theta, omega ]   [ theta ]
 // [   0  ,   1   ]   [   0   ]
 
-namespace rm  {
+namespace rm {
 
 constexpr double OUTPOST_OMEGA = 0.8 * M_PI;
 constexpr double OUTPOST_R = 0.2765;
-
 
 struct OutpostV1_FuncA {
     template<class T>
@@ -58,9 +72,7 @@ struct OutpostV1_OmegaFuncH {
     }
 };
 
-
 class OutpostV1 {
-
 public:
     OutpostV1(bool enable_weighted = false);
     ~OutpostV1() {}
@@ -80,33 +92,33 @@ public:
         fire_angle_center_ = center_angle;
     }
 
-    double getOmega() { return model_.estimate_X[4];};
-    void   getStateStr(std::vector<std::string>& str); 
-    bool   getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
-    bool   getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
+    double getOmega() {
+        return model_.estimate_X[4];
+    };
+    void getStateStr(std::vector<std::string>& str);
+    bool getFireArmor(const Eigen::Matrix<double, 4, 1>& pose);
+    bool getFireCenter(const Eigen::Matrix<double, 4, 1>& pose);
 
 private:
-    double getSafeSub(const double, const double);                  // 安全减法
-    double getAngleTrans(const double, const double);               // 将模型内角度转换为接近新角度
-    double getAngleMin(const double, const double, const double);   // 获取角度最小值
-    int    getToggle(const double, const double);                   // 获取切换标签
-    double getWeightByTheta(const double);                          // 根据角度获取权重
-    bool   isAngleTrans(const double, const double);                // 根据角度确定是否发生切换
+    double getSafeSub(const double, const double); // 安全减法
+    double getAngleTrans(const double, const double); // 将模型内角度转换为接近新角度
+    double getAngleMin(const double, const double, const double); // 获取角度最小值
+    int getToggle(const double, const double); // 获取切换标签
+    double getWeightByTheta(const double); // 根据角度获取权重
+    bool isAngleTrans(const double, const double); // 根据角度确定是否发生切换
 
-
-    int    fire_update_ = 100;
+    int fire_update_ = 100;
     double fire_delay_ = 1.5;
     double fire_angle_armor_ = 0.2;
     double fire_angle_center_ = 0.2;
 
-
     int toggle_ = 0;
     int update_num_ = 0;
 
-    bool     enable_weighted_ = false;                              // 是否使用加权平均z值
+    bool enable_weighted_ = false; // 是否使用加权平均z值
 
-    EKF<5, 4>       model_;
-    KF<2, 1>        omega_model_;
+    EKF<5, 4> model_;
+    KF<2, 1> omega_model_;
 
     OutpostV1_FuncA funcA_;
     OutpostV1_FuncH funcH_;
@@ -122,12 +134,6 @@ private:
     SlideWeightedAvg<double> weighted_z_;
 };
 
-
-}
-
-
-
-
-
+} // namespace rm
 
 #endif

@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_RUNE_V1_H__
 #define __OPENRM_KALMAN_INTERFACE_RUNE_V1_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
-#include <structure/slidestd.hpp>
+#include <utils/timer.h>
 #include <algorithm>
+#include <structure/slidestd.hpp>
 
 // a in [0.780, 1.045]
 // w in [1.884, 2.000]
@@ -19,10 +34,10 @@
 // p:          符的角速度相位
 // r:          符的半径
 
-// [ x, y, z, theta, angle, spd ]       [ x, y, z, theta, angle]    
+// [ x, y, z, theta, angle, spd ]       [ x, y, z, theta, angle]
 // [ 0, 1, 2,   3,     4,    5  ]       [ 0, 1, 2,   3,     4  ]
 
-// [ x, y, z, theta, angle, p, a, w ]   [ x, y, z, theta, angle]    
+// [ x, y, z, theta, angle, p, a, w ]   [ x, y, z, theta, angle]
 // [ 0, 1, 2,   3,     4,   5, 6, 7 ]   [ 0, 1, 2,   3,     4  ]
 
 // [ angle, spd ]   [ angle ]
@@ -58,13 +73,10 @@ struct BigRuneV1_FuncA {
         x1[1] = x0[1];
         x1[2] = x0[2];
         x1[3] = x0[3];
-        x1[4] = x0[4]
-              + sign * dt * (2.090 - x0[6])
-              + sign * x0[6] * ceres::sin(x0[5]) * dt;
+        x1[4] = x0[4] + sign * dt * (2.090 - x0[6]) + sign * x0[6] * ceres::sin(x0[5]) * dt;
         x1[5] = x0[5] + x0[7] * dt;
         x1[6] = x0[6];
         x1[7] = x0[7];
-        
     }
     double dt;
     double sign = 0.0;
@@ -123,40 +135,39 @@ public:
     void setBigMatrixR(double, double, double, double, double);
     void setSpdMatrixQ(double, double);
     void setSpdMatrixR(double);
-    void setRuneType(bool is_big_rune) { is_big_rune_ = is_big_rune; }
+    void setRuneType(bool is_big_rune) {
+        is_big_rune_ = is_big_rune;
+    }
     void getStateStr(std::vector<std::string>& str);
 
-
 private:
-    double getAngleTrans(const double, const double);               // 将模型内角度转换为接近新角度
-    double getSafeSub(const double, const double);                  // 安全减法
+    double getAngleTrans(const double, const double); // 将模型内角度转换为接近新角度
+    double getSafeSub(const double, const double); // 安全减法
 
-    int      toggle_ = 0;                                           // 切换标签
-    int      update_num_ = 0;                                       // 更新次数
-    bool     is_big_rune_ = false;                                  // 是否是大符
-    
-    
-    EKF<6, 5>          small_model_;                                // 运动模型
-    EKF<8, 5>          big_model_;                                  // 运动模型
-    KF<2, 1>           spd_model_;                                  // 角速度模型
+    int toggle_ = 0; // 切换标签
+    int update_num_ = 0; // 更新次数
+    bool is_big_rune_ = false; // 是否是大符
 
-    SmallRuneV1_FuncA  small_funcA_;                                // 运动模型的状态转移函数
-    BigRuneV1_FuncA    big_funcA_;                                  // 运动模型的状态转移函数
-    RuneV1_SpdFuncA    spd_funcA_;                                  // 角速度模型的状态转移函数
+    EKF<6, 5> small_model_; // 运动模型
+    EKF<8, 5> big_model_; // 运动模型
+    KF<2, 1> spd_model_; // 角速度模型
 
-    SmallRuneV1_FuncH  small_funcH_;                                // 运动模型的观测函数
-    BigRuneV1_FuncH    big_funcH_;                                  // 运动模型的观测函数
-    RuneV1_SpdFuncH    spd_funcH_;                                  // 角速度模型的观测函数
+    SmallRuneV1_FuncA small_funcA_; // 运动模型的状态转移函数
+    BigRuneV1_FuncA big_funcA_; // 运动模型的状态转移函数
+    RuneV1_SpdFuncA spd_funcA_; // 角速度模型的状态转移函数
 
-    TimePoint t_;                                                   // 上一次更新的时间
-    SlideAvg<double> center_x_;                                     // 符的中心点x坐标
-    SlideAvg<double> center_y_;                                     // 符的中心点y坐标
-    SlideAvg<double> center_z_;                                     // 符的中心点z坐标
-    SlideAvg<double> theta_;                                        // 符的朝向
-    SlideAvg<double> spd_;                                          // 符的速度
+    SmallRuneV1_FuncH small_funcH_; // 运动模型的观测函数
+    BigRuneV1_FuncH big_funcH_; // 运动模型的观测函数
+    RuneV1_SpdFuncH spd_funcH_; // 角速度模型的观测函数
+
+    TimePoint t_; // 上一次更新的时间
+    SlideAvg<double> center_x_; // 符的中心点x坐标
+    SlideAvg<double> center_y_; // 符的中心点y坐标
+    SlideAvg<double> center_z_; // 符的中心点z坐标
+    SlideAvg<double> theta_; // 符的朝向
+    SlideAvg<double> spd_; // 符的速度
 };
 
-
-};
+}; // namespace rm
 
 #endif

@@ -1,8 +1,23 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "tensorrt/tensorrt.h"
-#include "uniterm/uniterm.h"
-#include <iostream>
-#include <fstream>
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
+#include "uniterm/uniterm.h"
 
 using namespace nvinfer1;
 using namespace nvonnxparser;
@@ -15,7 +30,7 @@ bool rm::initTrtOnnx(
 ) {
     try {
         // 检查ONNX文件是否存在
-        if(access(onnx_file.c_str(), F_OK) != 0) {
+        if (access(onnx_file.c_str(), F_OK) != 0) {
             throw std::runtime_error("ONNX file not found.");
         }
 
@@ -87,35 +102,44 @@ bool rm::initTrtOnnx(
 
         // 使用 buildSerializedNetwork 替代 buildEngineWithConfig
         IHostMemory* serialized_engine = infer_builder->buildSerializedNetwork(*network, *config);
-        if (!serialized_engine) throw std::runtime_error("Failed to build serialized engine.");
+        if (!serialized_engine)
+            throw std::runtime_error("Failed to build serialized engine.");
 
         // 保存引擎文件
         std::ofstream file(engine_file, std::ios::binary);
-        if (!file) throw std::runtime_error("Failed to open engine file for writing.");
-        file.write(reinterpret_cast<const char*>(serialized_engine->data()), serialized_engine->size());
+        if (!file)
+            throw std::runtime_error("Failed to open engine file for writing.");
+        file.write(
+            reinterpret_cast<const char*>(serialized_engine->data()),
+            serialized_engine->size()
+        );
         file.close();
 
         // 创建运行时并反序列化引擎
         auto runtime = createInferRuntime(logger);
-        if (!runtime) throw std::runtime_error("Failed to create runtime.");
-        
-        auto engine = runtime->deserializeCudaEngine(serialized_engine->data(), serialized_engine->size());
-        if (!engine) throw std::runtime_error("Failed to deserialize engine.");
+        if (!runtime)
+            throw std::runtime_error("Failed to create runtime.");
+
+        auto engine =
+            runtime->deserializeCudaEngine(serialized_engine->data(), serialized_engine->size());
+        if (!engine)
+            throw std::runtime_error("Failed to deserialize engine.");
 
         // 创建执行上下文
         *context = engine->createExecutionContext();
-        if (!(*context)) throw std::runtime_error("Failed to create execution context.");
+        if (!(*context))
+            throw std::runtime_error("Failed to create execution context.");
 
         // 释放资源（使用 delete 替代 destroy）
-        delete parser;    // 替代 parser->destroy()
-        delete network;   // 替代 network->destroy()
+        delete parser; // 替代 parser->destroy()
+        delete network; // 替代 network->destroy()
         delete infer_builder; // 替代 infer_builder->destroy()
-        delete config;    // 替代 config->destroy()
+        delete config; // 替代 config->destroy()
         delete serialized_engine; // IHostMemory 仍需 destroy
-        
+
         // 注意：engine 和 runtime 由执行上下文管理，不能在此销毁
         rm::message("TensorRT ONNX model parsed and engine built", rm::MSG_OK);
-        return true; 
+        return true;
 
     } catch (const std::exception& e) {
         std::string error_message = e.what();
@@ -126,7 +150,7 @@ bool rm::initTrtOnnx(
         // }
 
         if (*context) {
-            delete *context;  // 替代 destroy()
+            delete *context; // 替代 destroy()
             *context = nullptr;
         }
 
@@ -134,13 +158,10 @@ bool rm::initTrtOnnx(
     }
 }
 
-bool rm::initTrtEngine(
-    const std::string& engine_file,
-    nvinfer1::IExecutionContext** context
-) {
+bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionContext** context) {
     try {
         // 检查引擎文件是否存在
-        if(access(engine_file.c_str(), F_OK) != 0) {
+        if (access(engine_file.c_str(), F_OK) != 0) {
             throw std::runtime_error("Engine file not found.");
         }
 
@@ -184,11 +205,13 @@ bool rm::initTrtEngine(
         // 移除 nullptr 参数
         auto engine = runtime->deserializeCudaEngine(serialized_engine, size);
         delete[] serialized_engine;
-        
-        if (!engine) throw std::runtime_error("Failed to deserialize engine.");
+
+        if (!engine)
+            throw std::runtime_error("Failed to deserialize engine.");
 
         *context = engine->createExecutionContext();
-        if (!(*context)) throw std::runtime_error("Failed to create execution context.");
+        if (!(*context))
+            throw std::runtime_error("Failed to create execution context.");
 
         // runtime 可安全销毁（引擎已加载）
         delete runtime;
@@ -203,16 +226,14 @@ bool rm::initTrtEngine(
         //     (*context)->destroy();
         // }
         if (*context) {
-            delete *context;  // 替代 destroy()
+            delete *context; // 替代 destroy()
             *context = nullptr;
         }
         return false;
     }
 }
 
-bool rm::initCudaStream(
-    cudaStream_t* stream
-) {
+bool rm::initCudaStream(cudaStream_t* stream) {
     try {
         // 创建CUDA流
         cudaSetDevice(0);
@@ -249,33 +270,33 @@ void rm::detectEnqueue(
         rm::message("Invalid TensorRT context", rm::MSG_ERROR);
         return;
     }
-    
+
     try {
         // 获取引擎引用
         auto& engine = (*context)->getEngine();
-        
+
         // 获取输入和输出绑定的名称
         char const* input_name = "input";
         char const* output_name = "output";
-        
+
         if (!input_name || !output_name) {
             throw std::runtime_error("Failed to get binding names");
         }
-        
+
         // 设置输入输出张量的地址
         if (!(*context)->setTensorAddress(input_name, input_device_buffer)) {
             throw std::runtime_error("Failed to set input tensor address");
         }
-        
+
         if (!(*context)->setTensorAddress(output_name, output_device_buffer)) {
             throw std::runtime_error("Failed to set output tensor address");
         }
-        
+
         // 执行推理
         if (!(*context)->enqueueV3(*stream)) {
             throw std::runtime_error("Failed to enqueue inference");
         }
-        
+
     } catch (const std::exception& e) {
         std::string error_message = e.what();
         rm::message("Detect Enqueue: " + error_message, rm::MSG_ERROR);
@@ -325,8 +346,14 @@ void rm::mallocYoloCameraBuffer(
     int batch_size,
     int channels
 ) {
-    cudaMallocHost(reinterpret_cast<void**>(rgb_host_buffer), rgb_width * rgb_height * channels * batch_size * sizeof(uint8_t));
-    cudaMalloc(reinterpret_cast<void**>(rgb_device_buffer), rgb_width * rgb_height * channels * batch_size * sizeof(uint8_t));
+    cudaMallocHost(
+        reinterpret_cast<void**>(rgb_host_buffer),
+        rgb_width * rgb_height * channels * batch_size * sizeof(uint8_t)
+    );
+    cudaMalloc(
+        reinterpret_cast<void**>(rgb_device_buffer),
+        rgb_width * rgb_height * channels * batch_size * sizeof(uint8_t)
+    );
     rm::message("Yolo Camera Buffer allocated", rm::MSG_OK);
 }
 
@@ -341,9 +368,18 @@ void rm::mallocYoloDetectBuffer(
     int batch_size,
     int channels
 ) {
-    cudaMalloc(reinterpret_cast<void**>(input_device_buffer), input_width * input_height * channels * batch_size * sizeof(float));
-    cudaMalloc(reinterpret_cast<void**>(output_device_buffer), (output_struct_size * bboxes_num + 1) * batch_size);
-    cudaMallocHost(reinterpret_cast<void**>(output_host_buffer), (output_struct_size * bboxes_num + 1) * batch_size);
+    cudaMalloc(
+        reinterpret_cast<void**>(input_device_buffer),
+        input_width * input_height * channels * batch_size * sizeof(float)
+    );
+    cudaMalloc(
+        reinterpret_cast<void**>(output_device_buffer),
+        (output_struct_size * bboxes_num + 1) * batch_size
+    );
+    cudaMallocHost(
+        reinterpret_cast<void**>(output_host_buffer),
+        (output_struct_size * bboxes_num + 1) * batch_size
+    );
     rm::message("Yolo Detect Buffer allocated", rm::MSG_OK);
 }
 
@@ -368,10 +404,7 @@ void rm::mallocClassifyBuffer(
     rm::message("Classify Buffer allocated", rm::MSG_OK);
 }
 
-void rm::freeYoloCameraBuffer(
-    uint8_t* rgb_host_buffer,
-    uint8_t* rgb_device_buffer
-) {
+void rm::freeYoloCameraBuffer(uint8_t* rgb_host_buffer, uint8_t* rgb_device_buffer) {
     cudaFreeHost(rgb_host_buffer);
     cudaFree(rgb_device_buffer);
     rm::message("Yolo Camera Buffer free", rm::MSG_WARNING);
@@ -428,8 +461,8 @@ void rm::memcpyClassifyBuffer(
     if (channels == 3) {
         int pixel_num = input_width * input_height;
         for (size_t i = 0; i < pixel_num; i++) {
-            input_host_buffer[i]                 = static_cast<float>(mat_data[i * channels + 2]);
-            input_host_buffer[i + pixel_num]     = static_cast<float>(mat_data[i * channels + 1]);
+            input_host_buffer[i] = static_cast<float>(mat_data[i * channels + 2]);
+            input_host_buffer[i + pixel_num] = static_cast<float>(mat_data[i * channels + 1]);
             input_host_buffer[i + pixel_num * 2] = static_cast<float>(mat_data[i * channels]);
         }
     } else {
@@ -437,5 +470,5 @@ void rm::memcpyClassifyBuffer(
             input_host_buffer[i] = static_cast<float>(mat_data[i]);
         }
     }
-    cudaMemcpy(input_device_buffer, input_host_buffer, input_size, cudaMemcpyHostToDevice); 
+    cudaMemcpy(input_device_buffer, input_host_buffer, input_size, cudaMemcpyHostToDevice);
 }

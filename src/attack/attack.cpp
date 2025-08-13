@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "attack/attack.h"
 #include <Eigen/Dense>
 
@@ -48,30 +63,26 @@ double rm::getAngleOffsetTargetToReferee(
     Eigen::Matrix<double, 3, 1> vec_referee, vec_target;
     Eigen::Matrix<double, 4, 1> pose_referee;
 
-    vec_referee <<  cos(referee_yaw) * cos(referee_pitch), 
-                    sin(referee_yaw) * cos(referee_pitch),  
-                    sin(referee_pitch);
+    vec_referee << cos(referee_yaw) * cos(referee_pitch), sin(referee_yaw) * cos(referee_pitch),
+        sin(referee_pitch);
     matrix_rotate << cos(yaw) * cos(pitch), -sin(yaw), -cos(yaw) * sin(pitch),
-                     sin(yaw) * cos(pitch),  cos(yaw), -sin(yaw) * sin(pitch),
-                     sin(pitch),             0,         cos(pitch);
+        sin(yaw) * cos(pitch), cos(yaw), -sin(yaw) * sin(pitch), sin(pitch), 0, cos(pitch);
     vec_referee = matrix_rotate * vec_referee;
 
     pose_referee << referee_x, referee_y, referee_z, 1;
     matrix_trans << cos(yaw) * cos(pitch), -sin(yaw), -cos(yaw) * sin(pitch), axis_x,
-                    sin(yaw) * cos(pitch),  cos(yaw), -sin(yaw) * sin(pitch), axis_y,
-                    sin(pitch),             0,         cos(pitch),            axis_z,
-                    0,                      0,         0,                     1;
+        sin(yaw) * cos(pitch), cos(yaw), -sin(yaw) * sin(pitch), axis_y, sin(pitch), 0, cos(pitch),
+        axis_z, 0, 0, 0, 1;
     pose_referee = matrix_trans * pose_referee;
 
-    vec_target << target_x - pose_referee(0, 0), 
-                  target_y - pose_referee(1, 0),
-                  target_z - pose_referee(2, 0);
+    vec_target << target_x - pose_referee(0, 0), target_y - pose_referee(1, 0),
+        target_z - pose_referee(2, 0);
 
     double dot_product = vec_referee.dot(vec_target);
     double norm_referee = vec_referee.norm();
     double norm_target = vec_target.norm();
     double cos_theta = dot_product / (norm_referee * norm_target);
     double theta = acos(cos_theta);
-    
+
     return theta;
 }

@@ -1,10 +1,25 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_RUNE_V2_H__
 #define __OPENRM_KALMAN_INTERFACE_RUNE_V2_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
-#include <structure/slidestd.hpp>
+#include <utils/timer.h>
 #include <algorithm>
+#include <structure/slidestd.hpp>
 
 // a in [0.780, 1.045]
 // w in [1.884, 2.000]
@@ -19,10 +34,10 @@
 // p:          符的角速度相位
 // r:          符的半径
 
-// [ x, y, z, theta, angle, spd ]       [ x, y, z, theta, angle]    
+// [ x, y, z, theta, angle, spd ]       [ x, y, z, theta, angle]
 // [ 0, 1, 2,   3,     4,    5  ]       [ 0, 1, 2,   3,     4  ]
 
-// [ x, y, z, theta, angle, p, a, w ]   [ x, y, z, theta, angle]    
+// [ x, y, z, theta, angle, p, a, w ]   [ x, y, z, theta, angle]
 // [ 0, 1, 2,   3,     4,   5, 6, 7 ]   [ 0, 1, 2,   3,     4  ]
 
 // [ angle, spd ]   [ angle ]
@@ -58,13 +73,10 @@ struct BigRuneV2_FuncA {
         x1[1] = x0[1];
         x1[2] = x0[2];
         x1[3] = x0[3];
-        x1[4] = x0[4]
-              + sign * dt * (2.090 - x0[6])
-              + sign * x0[6] * ceres::sin(x0[5]) * dt;
+        x1[4] = x0[4] + sign * dt * (2.090 - x0[6]) + sign * x0[6] * ceres::sin(x0[5]) * dt;
         x1[5] = x0[5] + x0[7] * dt;
         x1[6] = x0[6];
         x1[7] = x0[7];
-        
     }
     double dt;
     double sign = 0.0;
@@ -125,8 +137,16 @@ public:
     void setBigMatrixR(double, double, double, double, double);
     void setSpdMatrixQ(double, double);
     void setSpdMatrixR(double);
-    void setRuneType(bool is_big_rune) { is_big_rune_ = is_big_rune; }
-    void setAutoFire(double big_spd, double fire_after, double fire_flag_keep, double fire_interval, double to_center) {
+    void setRuneType(bool is_big_rune) {
+        is_big_rune_ = is_big_rune;
+    }
+    void setAutoFire(
+        double big_spd,
+        double fire_after,
+        double fire_flag_keep,
+        double fire_interval,
+        double to_center
+    ) {
         big_rune_fire_spd_ = big_spd;
         fire_after_trans_delay_ = fire_after;
         fire_flag_keep_delay_ = fire_flag_keep;
@@ -134,49 +154,46 @@ public:
         turn_to_center_delay_ = to_center;
     }
 
-
 private:
-    double getAngleTrans(const double, const double);               // 将模型内角度转换为接近新角度
-    bool   getRuneTrans(const double, const double);                // 判断是否发生了符页切换
-    double getSafeSub(const double, const double);                  // 安全减法
+    double getAngleTrans(const double, const double); // 将模型内角度转换为接近新角度
+    bool getRuneTrans(const double, const double); // 判断是否发生了符页切换
+    double getSafeSub(const double, const double); // 安全减法
 
-    int      toggle_ = 0;                                           // 切换标签
-    int      update_num_ = 0;                                       // 更新次数
-    bool     is_big_rune_ = false;                                  // 是否是大符
-    bool     is_rune_trans_ = false;                                // 符是否切换
-    bool     is_fire_flag_  = false;                                // 当前是否开火
+    int toggle_ = 0; // 切换标签
+    int update_num_ = 0; // 更新次数
+    bool is_big_rune_ = false; // 是否是大符
+    bool is_rune_trans_ = false; // 符是否切换
+    bool is_fire_flag_ = false; // 当前是否开火
 
-    double   big_rune_fire_spd_      = 1.0;                         // 大符开火角速度
-    double   fire_after_trans_delay_ = 0.1;                         // 符切换后多久开火
-    double   fire_flag_keep_delay_   = 0.1;                         // 开火信号保留时间
-    double   fire_interval_delay_    = 0.5;                         // 两次开火间隔
-    double   turn_to_center_delay_   = 1.0;                         // 模型保留时间
-    
-    
-    EKF<6, 5>          small_model_;                                // 运动模型
-    EKF<8, 5>          big_model_;                                  // 运动模型
-    KF<2, 1>           spd_model_;                                  // 角速度模型
+    double big_rune_fire_spd_ = 1.0; // 大符开火角速度
+    double fire_after_trans_delay_ = 0.1; // 符切换后多久开火
+    double fire_flag_keep_delay_ = 0.1; // 开火信号保留时间
+    double fire_interval_delay_ = 0.5; // 两次开火间隔
+    double turn_to_center_delay_ = 1.0; // 模型保留时间
 
-    SmallRuneV2_FuncA  small_funcA_;                                // 运动模型的状态转移函数
-    BigRuneV2_FuncA    big_funcA_;                                  // 运动模型的状态转移函数
-    RuneV2_SpdFuncA    spd_funcA_;                                  // 角速度模型的状态转移函数
+    EKF<6, 5> small_model_; // 运动模型
+    EKF<8, 5> big_model_; // 运动模型
+    KF<2, 1> spd_model_; // 角速度模型
 
-    SmallRuneV2_FuncH  small_funcH_;                                // 运动模型的观测函数
-    BigRuneV2_FuncH    big_funcH_;                                  // 运动模型的观测函数
-    RuneV2_SpdFuncH    spd_funcH_;                                  // 角速度模型的观测函数
+    SmallRuneV2_FuncA small_funcA_; // 运动模型的状态转移函数
+    BigRuneV2_FuncA big_funcA_; // 运动模型的状态转移函数
+    RuneV2_SpdFuncA spd_funcA_; // 角速度模型的状态转移函数
 
-    TimePoint t_;                                                   // 上一次更新的时间
-    TimePoint t_trans_;                                             // 上一次符切换时间
-    TimePoint t_fire_;                                              // 上一次开火时间
+    SmallRuneV2_FuncH small_funcH_; // 运动模型的观测函数
+    BigRuneV2_FuncH big_funcH_; // 运动模型的观测函数
+    RuneV2_SpdFuncH spd_funcH_; // 角速度模型的观测函数
 
-    SlideAvg<double> center_x_;                                     // 符的中心点x坐标
-    SlideAvg<double> center_y_;                                     // 符的中心点y坐标
-    SlideAvg<double> center_z_;                                     // 符的中心点z坐标
-    SlideAvg<double> theta_;                                        // 符的朝向
-    SlideAvg<double> spd_;                                          // 符的速度
+    TimePoint t_; // 上一次更新的时间
+    TimePoint t_trans_; // 上一次符切换时间
+    TimePoint t_fire_; // 上一次开火时间
+
+    SlideAvg<double> center_x_; // 符的中心点x坐标
+    SlideAvg<double> center_y_; // 符的中心点y坐标
+    SlideAvg<double> center_z_; // 符的中心点z坐标
+    SlideAvg<double> theta_; // 符的朝向
+    SlideAvg<double> spd_; // 符的速度
 };
 
-
-};
+}; // namespace rm
 
 #endif

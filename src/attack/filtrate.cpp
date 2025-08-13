@@ -1,20 +1,36 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "attack/filtrate.h"
 using namespace rm;
 
-Filtrate::Filtrate() : AttackInterface() {
+Filtrate::Filtrate(): AttackInterface() {
     state_.resize(ArmorID::ARMOR_ID_COUNT);
     focus_id_ = ARMOR_ID_UNKNOWN;
 }
 
-void Filtrate::push(ArmorID armor_id, double angle, TimePoint t)  {
-    if (!isValidArmorID(armor_id, valid_byte_)) return;
+void Filtrate::push(ArmorID armor_id, double angle, TimePoint t) {
+    if (!isValidArmorID(armor_id, valid_byte_))
+        return;
     state_[armor_id].last_t = t;
     state_[armor_id].exist = true;
 }
 
 ArmorID Filtrate::pop() {
     TimePoint now_t = getTime();
-    for(size_t i = 0; i < state_.size(); i++) {
+    for (size_t i = 0; i < state_.size(); i++) {
         if (!isValidArmorID((ArmorID)i, valid_byte_)) {
             state_[i].exist = false;
             continue;
@@ -33,7 +49,7 @@ ArmorID Filtrate::pop() {
 
     double min_dt = -1;
     focus_id_ = ARMOR_ID_UNKNOWN;
-    for(size_t i = 0; i < state_.size(); i++) {
+    for (size_t i = 0; i < state_.size(); i++) {
         if (!state_[i].exist || !isValidArmorID((ArmorID)i, valid_byte_)) {
             continue;
         }
@@ -50,7 +66,7 @@ ArmorID Filtrate::pop() {
 void Filtrate::refresh() {
     focus_id_ = ARMOR_ID_UNKNOWN;
     TimePoint now_t = getTime();
-    for (auto& focus : state_) {
+    for (auto& focus: state_) {
         if (getDoubleOfS(focus.last_t, now_t) > exist_dt_) {
             focus.exist = false;
         }
@@ -58,7 +74,7 @@ void Filtrate::refresh() {
 }
 
 void Filtrate::clear() {
-    for (auto& focus : state_) {
+    for (auto& focus: state_) {
         focus.exist = false;
         focus.last_t = getTime();
     }

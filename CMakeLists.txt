@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
-project(OpenRM)
+project(DPRM)
 
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%S")
+message("Build timestamp is ${BUILD_TIMESTAMP}")
 
 set(CMAKE_CXX_STANDARD 20)
+# Export compile commands for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set(CMAKE_BUILD_TYPE DEBUG)
 # add_compile_options(-g -O0 -w -fno-omit-frame-pointer -Wno-notes)
 
 set(CMAKE_BUILD_TYPE RELEASE)
-add_compile_options(-O3 -w)
+add_compile_options(-O3 -w) # 禁用警告
 
 # OpenCV
 find_package(OpenCV 4.10.0 REQUIRED)
@@ -23,28 +27,30 @@ find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 
 # CUDA
+# CUDA的库寻找需要比TensorRT早，避免精度损失，参考: https://www.cnblogs.com/yanghailin/p/14651931.html
 find_package(CUDA)
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     message(STATUS "CUDA Version: ${CUDA_VERSION}")
     include_directories(/usr/local/cuda/include)
 endif()
 
 # 设置主版本号、次版本号和补丁版本号
-set(OPENRM_VERSION_MAJOR 1)
-set(OPENRM_VERSION_MINOR 0)
-set(OPENRM_VERSION_PATCH 0)
+set(DPRM_VERSION_MAJOR 0)
+set(DPRM_VERSION_MINOR 0)
+set(DPRM_VERSION_PATCH 1)
+message("Version is ${DPRM_VERSION_MAJOR}.${DPRM_VERSION_MINOR}.${DPRM_VERSION_PATCH}")
 
 # 生成完整的版本号
-set(OPENRM_VERSION ${OPENRM_VERSION_MAJOR}.${OPENRM_VERSION_MINOR}.${OPENRM_VERSION_PATCH})
+set(DPRM_VERSION ${DPRM_VERSION_MAJOR}.${DPRM_VERSION_MINOR}.${DPRM_VERSION_PATCH})
 
 # 将宏定义添加到项目
-add_definitions(-DOPENRM_VERSION="${OPENRM_VERSION}")
-# add_definitions(-DPOINTER_IO)
+add_definitions(-DDPRM_VERSION="${DPRM_VERSION}")
 
 # 将版本号定义为预定义宏，使其在程序内部可访问
+# 复制文件
 configure_file(
-    ${CMAKE_SOURCE_DIR}/cmake/VersionConfig.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/VersionConfig.h)
+    "${CMAKE_SOURCE_DIR}/cmake/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.h")
 
 
 # 添加子目录
@@ -56,14 +62,14 @@ add_subdirectory(src/uniterm)
 add_subdirectory(src/utils)
 add_subdirectory(src/video)
 
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     add_subdirectory(src/tensorrt)
     add_subdirectory(cuda)
 endif()
 
 
 # 添加目标文件
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     set(
         TARGETS_LIST
             openrm_attack
@@ -118,7 +124,7 @@ install(
         include/openrm
 )
 
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     install(
         FILES
             ${CMAKE_SOURCE_DIR}/cuda/include/cudatools.h
@@ -130,7 +136,7 @@ endif()
 install(
     DIRECTORY
         ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION 
+    DESTINATION
         include/openrm
 )
 
@@ -145,7 +151,7 @@ install(
 
 include(CMakePackageConfigHelpers)
 
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     configure_package_config_file(
         ${CMAKE_SOURCE_DIR}/cmake/OpenRMConfig.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/OpenRMConfig.cmake
@@ -181,4 +187,3 @@ if(NOT TARGET uninstall)
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
     )
 endif()
-

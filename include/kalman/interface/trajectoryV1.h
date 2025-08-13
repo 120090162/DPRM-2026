@@ -1,7 +1,22 @@
+/*
+ * Copyright (c) 2026, Cuhksz DragonPass. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OPENRM_KALMAN_INTERFACE_TRAJECTORY_V1_H__
 #define __OPENRM_KALMAN_INTERFACE_TRAJECTORY_V1_H__
-#include <utils/timer.h>
 #include <kalman/filter/ekf.h>
+#include <utils/timer.h>
 #include <algorithm>
 
 // [ x, y, z, vx, vy, vz, ax, ay, az ]  [ x, y, z ]
@@ -35,7 +50,6 @@ struct TrajectoryV1_FuncH {
 };
 
 class TrajectoryV1 {
-
 public:
     TrajectoryV1();
     TrajectoryV1(double keep_delay);
@@ -49,18 +63,16 @@ public:
     void setMatrixR(double, double, double);
     void setKeepDelay(double keep_delay);
 
-
-
 private:
     double keep_delay_ = 3.0;
 
     EKF<9, 3> model_;
-    TrajectoryV1_FuncA  funcA_;                                        // 运动模型的状态转移函数
-    TrajectoryV1_FuncH  funcH_; 
+    TrajectoryV1_FuncA funcA_; // 运动模型的状态转移函数
+    TrajectoryV1_FuncH funcH_;
 
     TimePoint t_;
 };
 
-}
+} // namespace rm
 
 #endif
