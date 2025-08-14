@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
-#define __OPENRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
+#ifndef __DPRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
+#define __DPRM_STRUCTURE_SLIDE_WEIGHTED_HPP__
 #include <algorithm>
 #include <cmath>
 #include <deque>

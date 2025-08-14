@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_KALMAN_MODEL_EKF_SINGLE_MODEL_H__
-#define __OPENRM_KALMAN_MODEL_EKF_SINGLE_MODEL_H__
+#ifndef __DPRM_KALMAN_MODEL_EKF_SINGLE_MODEL_H__
+#define __DPRM_KALMAN_MODEL_EKF_SINGLE_MODEL_H__
 
 // [ x, y, z, theta, vx, vy, vz, ax, ay]  [ x, y, z, theta]
 // [ 0, 1, 2,   3,   4,  5,  6,  7,  8 ]  [ 0, 1, 2,   3  ]

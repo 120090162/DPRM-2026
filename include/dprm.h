@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_H__
-#define __OPENRM_H__
+#ifndef __DPRM_H__
+#define __DPRM_H__
 
-#include <version.h>
+#include <dp_version.h>
 
 #include <attack/attack.h>
 #include <attack/deadlocker.h>

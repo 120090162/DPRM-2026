@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_SHARED_MEMORY_HPP__
-#define __OPENRM_STRUCTURE_SHARED_MEMORY_HPP__
+#ifndef __DPRM_STRUCTURE_SHARED_MEMORY_HPP__
+#define __DPRM_STRUCTURE_SHARED_MEMORY_HPP__
 #include <string.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>

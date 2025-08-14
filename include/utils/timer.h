@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_UTILS_TIMER_H__
-#define __OPENRM_UTILS_TIMER_H__
+#ifndef __DPRM_UTILS_TIMER_H__
+#define __DPRM_UTILS_TIMER_H__
 
 #include <chrono>
 #include <string>

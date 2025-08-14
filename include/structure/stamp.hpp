@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_STAMP_H__
-#define __OPENRM_STRUCTURE_STAMP_H__
+#ifndef __DPRM_STRUCTURE_STAMP_H__
+#define __DPRM_STRUCTURE_STAMP_H__
 
 #include <Eigen/Dense>
 #include <memory>

@@ -19,13 +19,13 @@ include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/cuda/include)
 
 # 编译为链接库
-cuda_add_library(openrm_cudatools
+cuda_add_library(dprm_cudatools
     STATIC
         ${SOURCES}
 )
 
 # 链接CUDA库
 target_link_libraries(
-    openrm_cudatools
+    dprm_cudatools
         ${CUDA_LIBRARIES}
 )

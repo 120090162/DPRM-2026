@@ -1,22 +1,22 @@
 add_library(
-    openrm_tensorrt
+    dprm_tensorrt
         SHARED
 )
 target_sources(
-    openrm_tensorrt
+    dprm_tensorrt
         PRIVATE
         ${CMAKE_SOURCE_DIR}/src/tensorrt/nms.cpp
         ${CMAKE_SOURCE_DIR}/src/tensorrt/nmsV5C36.cpp
         ${CMAKE_SOURCE_DIR}/src/tensorrt/tensorrt.cpp
 )
 target_include_directories(
-    openrm_tensorrt
+    dprm_tensorrt
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/openrm>
+        $<INSTALL_INTERFACE:include/dprm>
 )
 #target_link_libraries(
-#    openrm_tensorrt
+#    dprm_tensorrt
 #        PRIVATE
 #        nvinfer
 #        nvinfer_plugin
@@ -26,7 +26,7 @@ target_include_directories(
 #        cublas
 #)
 target_link_libraries(
-    openrm_tensorrt
+    dprm_tensorrt
         PRIVATE
         nvinfer
         nvinfer_plugin

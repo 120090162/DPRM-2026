@@ -1,0 +1,29 @@
+@PACKAGE_INIT@
+
+include("@CMAKE_INSTALL_PREFIX@/lib/cmake/dprm/DPRMTarget.cmake")
+
+set(
+    DPRM_INCLUDE_DIRS
+        "@CMAKE_INSTALL_PREFIX@/include"
+        "@CMAKE_INSTALL_PREFIX@/include/dprm"
+)
+
+set(
+    DPRM_LIBS
+        dprm::dprm_attack
+        dprm::dprm_kalman
+        dprm::dprm_pointer
+        dprm::dprm_solver
+        dprm::dprm_video
+
+        dprm::dprm_delay
+        dprm::dprm_print
+        dprm::dprm_serial
+        dprm::dprm_tf
+        dprm::dprm_timer
+
+        dprm::dprm_uniterm
+
+        dprm::dprm_tensorrt
+        dprm::dprm_cudatools
+)

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_KALMAN_INTERFACE_RUNE_V1_H__
-#define __OPENRM_KALMAN_INTERFACE_RUNE_V1_H__
+#ifndef __DPRM_KALMAN_INTERFACE_RUNE_V1_H__
+#define __DPRM_KALMAN_INTERFACE_RUNE_V1_H__
 #include <kalman/filter/ekf.h>
 #include <kalman/filter/kf.h>
 #include <utils/timer.h>

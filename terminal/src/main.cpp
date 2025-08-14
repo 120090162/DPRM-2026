@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
                 rm::monitor(key_name);
                 break;
             case 'v':
-                std::cout << "OpenRM version: " << DPRM_VERSION << std::endl;
+                std::cout << "DPRM version: " << DPRM_VERSION << std::endl;
                 break;
             case 'o':
                 oscilloscope_flag = true;

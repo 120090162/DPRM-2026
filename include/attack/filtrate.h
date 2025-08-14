@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_ATTACK_FILTRATE_H__
-#define __OPENRM_ATTACK_FILTRATE_H__
+#ifndef __DPRM_ATTACK_FILTRATE_H__
+#define __DPRM_ATTACK_FILTRATE_H__
 #include <attack/attack.h>
 #include <vector>
 

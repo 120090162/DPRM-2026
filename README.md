@@ -135,12 +135,12 @@ sudo ./run.sh -t
 ```
 `run.sh` 有多种功能：
 
-- **-t** 编译安装**OpenRM**动态链接库后，编译安装名为 **openrm** 的参数面板程序
+- **-t** 编译安装**DPRM**动态链接库后，编译安装名为 **dprm** 的参数面板程序
 - **-r** 删除编译和安装结果，并重新编译
-- **-d** 彻底删除 OpenRM
+- **-d** 彻底删除 DPRM
 - **-i** 重新安装
 - **-g \<arg>** 调用git，需添加commit
-- 不添加参数，只编译安装 **OpenRM** 动态链接库
+- 不添加参数，只编译安装 **DPRM** 动态链接库
 
 ## 🕹️ Play!
 * Visualize the model in drake/mujoco
@@ -175,6 +175,8 @@ sudo ./run.sh -t
       python demo/mujoco/achilles/main_walk.py
 
 # 学习记录
+[cmake使用](https://modern-cmake-cn.github.io/Modern-CMake-zh_CN/chapters/basics.html)
+[C++终端GUI使用](https://www.cnblogs.com/VeniVidiVici/p/17318232.html)
 [tensorrt使用](https://github.com/wdhao/tensorrtCV.git)
 [yolov5迁移](https://github.com/wang-xinyu/tensorrtx/tree/trt10)
 [yolov5训练](https://github.com/Spphire/YOLOarmor-2022final)

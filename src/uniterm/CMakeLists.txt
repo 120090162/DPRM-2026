@@ -1,9 +1,9 @@
 add_library(
-    openrm_uniterm
+    dprm_uniterm
         SHARED
 )
 target_sources(
-    openrm_uniterm
+    dprm_uniterm
         PRIVATE
         ${CMAKE_SOURCE_DIR}/src/uniterm/message.cpp
         ${CMAKE_SOURCE_DIR}/src/uniterm/monitor.cpp
@@ -11,12 +11,12 @@ target_sources(
         ${CMAKE_SOURCE_DIR}/src/uniterm/oscilloscope.cpp
 )
 target_include_directories(
-    openrm_uniterm
+    dprm_uniterm
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/openrm>
+        $<INSTALL_INTERFACE:include/dprm>
 )
 target_link_libraries(
-    openrm_uniterm
+    dprm_uniterm
         ncurses
 )

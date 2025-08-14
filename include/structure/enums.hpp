@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_ENUMS_HPP__
-#define __OPENRM_STRUCTURE_ENUMS_HPP__
+#ifndef __DPRM_STRUCTURE_ENUMS_HPP__
+#define __DPRM_STRUCTURE_ENUMS_HPP__
 
 namespace rm {
 

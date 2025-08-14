@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_CUDA_TOOLS_H__
-#define __OPENRM_CUDA_TOOLS_H__
+#ifndef __DPRM_CUDA_TOOLS_H__
+#define __DPRM_CUDA_TOOLS_H__
 #include <cstdint>
 
 namespace rm {

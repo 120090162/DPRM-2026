@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_TERMINAL_H__
-#define __OPENRM_TERMINAL_H__
+#ifndef __DPRM_TERMINAL_H__
+#define __DPRM_TERMINAL_H__
 
-#include <openrm.h>
+#include <dprm.h>
 
 void readFile(const std::string& path, std::vector<double>& inputs);
 

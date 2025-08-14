@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_POINTER_POINTER_H__
-#define __OPENRM_POINTER_POINTER_H__
+#ifndef __DPRM_POINTER_POINTER_H__
+#define __DPRM_POINTER_POINTER_H__
 
 #include "structure/enums.hpp"
 #include "structure/stamp.hpp"

@@ -1,5 +1,5 @@
-#ifndef __OPENRM_SOLVER_TRICHOTOMY_H__
-#define __OPENRM_SOLVER_TRICHOTOMY_H__
+#ifndef __DPRM_SOLVER_TRICHOTOMY_H__
+#define __DPRM_SOLVER_TRICHOTOMY_H__
 
 namespace rm {
 

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_VIDEO_VIDEO_H__
-#define __OPENRM_VIDEO_VIDEO_H__
+#ifndef __DPRM_VIDEO_VIDEO_H__
+#define __DPRM_VIDEO_VIDEO_H__
 #include <cstdint>
 #include <string>
 #include <structure/camera.hpp>

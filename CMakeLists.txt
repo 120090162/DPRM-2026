@@ -66,8 +66,8 @@ add_definitions(-DDPRM_VERSION="${DPRM_VERSION}")
 # 将版本号定义为预定义宏，使其在程序内部可访问
 # 复制文件
 configure_file(
-    "${CMAKE_SOURCE_DIR}/cmake/version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/version.h")
+    "${CMAKE_SOURCE_DIR}/cmake/dp_version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/dp_version.h")
 
 
 # 添加子目录
@@ -89,34 +89,34 @@ endif()
 if(CUDA_FOUND)
     set(
         TARGETS_LIST
-            openrm_attack
-            openrm_kalman
-            openrm_pointer
-            openrm_solver
-            openrm_delay
-            openrm_print
-            openrm_serial
-            openrm_tf
-            openrm_timer
-            openrm_uniterm
-            openrm_video
-            openrm_tensorrt
-            openrm_cudatools
+            dprm_attack
+            dprm_kalman
+            dprm_pointer
+            dprm_solver
+            dprm_delay
+            dprm_print
+            dprm_serial
+            dprm_tf
+            dprm_timer
+            dprm_uniterm
+            dprm_video
+            dprm_tensorrt
+            dprm_cudatools
     )
 else()
     set(
         TARGETS_LIST
-            openrm_attack
-            openrm_kalman
-            openrm_pointer
-            openrm_solver
-            openrm_delay
-            openrm_print
-            openrm_serial
-            openrm_tf
-            openrm_timer
-            openrm_uniterm
-            openrm_video
+            dprm_attack
+            dprm_kalman
+            dprm_pointer
+            dprm_solver
+            dprm_delay
+            dprm_print
+            dprm_serial
+            dprm_tf
+            dprm_timer
+            dprm_uniterm
+            dprm_video
     )
 endif()
 
@@ -125,7 +125,7 @@ install(
     TARGETS
         ${TARGETS_LIST}
     EXPORT
-        OpenRMTarget
+        DPRMTarget
     RUNTIME DESTINATION
         bin
     LIBRARY DESTINATION
@@ -136,9 +136,9 @@ install(
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/VersionConfig.h
+        ${CMAKE_CURRENT_BINARY_DIR}/dp_version.h
     DESTINATION
-        include/openrm
+        include/dprm
 )
 
 if(CUDA_FOUND)
@@ -146,7 +146,7 @@ if(CUDA_FOUND)
         FILES
             ${CMAKE_SOURCE_DIR}/cuda/include/cudatools.h
         DESTINATION
-            include/openrm
+            include/dprm
     )
 endif()
 
@@ -154,42 +154,43 @@ install(
     DIRECTORY
         ${CMAKE_SOURCE_DIR}/include/
     DESTINATION
-        include/openrm
+        include/dprm
 )
 
 install(
     EXPORT
-        OpenRMTarget
+        DPRMTarget
     NAMESPACE
-        openrm::
+        dprm::
     DESTINATION
-        lib/cmake/openrm
+        lib/cmake/dprm
 )
 
+# 帮助自动生成cmakelist初始化代码
 include(CMakePackageConfigHelpers)
 
 if(CUDA_FOUND)
     configure_package_config_file(
-        ${CMAKE_SOURCE_DIR}/cmake/OpenRMConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/OpenRMConfig.cmake
+        ${CMAKE_SOURCE_DIR}/cmake/DPRMConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/DPRMConfig.cmake
         INSTALL_DESTINATION
-            lib/cmake/openrm
+            lib/cmake/dprm
     )
 else()
     configure_package_config_file(
-        ${CMAKE_SOURCE_DIR}/cmake/OpenRMConfig.cmake.in.nocuda
-        ${CMAKE_CURRENT_BINARY_DIR}/OpenRMConfig.cmake
+        ${CMAKE_SOURCE_DIR}/cmake/DPRMConfig.cmake.in.nocuda
+        ${CMAKE_CURRENT_BINARY_DIR}/DPRMConfig.cmake
         INSTALL_DESTINATION
-            lib/cmake/openrm
+            lib/cmake/dprm
     )
 endif()
 
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/OpenRMConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/DPRMConfig.cmake
     DESTINATION
-        lib/cmake/openrm
+        lib/cmake/dprm
 )
 
 # 卸载

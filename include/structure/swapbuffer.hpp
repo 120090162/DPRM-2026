@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_SWAP_BUFFER_HPP__
-#define __OPENRM_STRUCTURE_SWAP_BUFFER_HPP__
+#ifndef __DPRM_STRUCTURE_SWAP_BUFFER_HPP__
+#define __DPRM_STRUCTURE_SWAP_BUFFER_HPP__
 #include <array>
 #include <memory>
 #include <mutex>

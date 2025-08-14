@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_RESIZE_CUH__
-#define __OPENRM_RESIZE_CUH__
+#ifndef __DPRM_RESIZE_CUH__
+#define __DPRM_RESIZE_CUH__
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>

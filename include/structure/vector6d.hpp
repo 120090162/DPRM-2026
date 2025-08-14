@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_VECTOR6D_HPP__
-#define __OPENRM_STRUCTURE_VECTOR6D_HPP__
+#ifndef __DPRM_STRUCTURE_VECTOR6D_HPP__
+#define __DPRM_STRUCTURE_VECTOR6D_HPP__
 
 namespace rm {
 class Vector6d {

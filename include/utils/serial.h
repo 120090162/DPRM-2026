@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_SERIAL_SERIAL_H__
-#define __OPENRM_SERIAL_SERIAL_H__
+#ifndef __DPRM_SERIAL_SERIAL_H__
+#define __DPRM_SERIAL_SERIAL_H__
 
 #include <cstdint>
 #include <cstring>

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_SOLVER_SOLVEPNP_H__
-#define __OPENRM_SOLVER_SOLVEPNP_H__
+#ifndef __DPRM_SOLVER_SOLVEPNP_H__
+#define __DPRM_SOLVER_SOLVEPNP_H__
 #include <utils/tf.h>
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>

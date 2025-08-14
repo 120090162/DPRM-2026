@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <openrm/openrm.h>
+#include <dprm/dprm.h>
 #include <chrono>
 #include <iostream>
 #include <opencv2/opencv.hpp>

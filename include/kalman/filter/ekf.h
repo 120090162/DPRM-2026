@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __OPENRM_KALMAN_FILTER_EKF_H__
-#define __OPENRM_KALMAN_FILTER_EKF_H__
+#ifndef __DPRM_KALMAN_FILTER_EKF_H__
+#define __DPRM_KALMAN_FILTER_EKF_H__
 
 #include <ceres/jet.h>
 #include <Eigen/Dense>

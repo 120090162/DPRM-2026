@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(OpenRM-Test)
+project(DPRM-Test)
 
 set(CMAKE_CXX_STANDARD 11)
 # add_compile_options(-g -O0 -w -fno-omit-frame-pointer -Wno-notes)
@@ -22,16 +22,16 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 
-# OpenRM
-find_package(OpenRM REQUIRED)
-include_directories(${OpenRM_INCLUDE_DIRS})
+# DPRM
+find_package(DPRM REQUIRED)
+include_directories(${DPRM_INCLUDE_DIRS})
 
-message(STATUS "OpenRM_INCLUDE_DIRS: ${OpenRM_INCLUDE_DIRS}")
-message(STATUS "OpenRM_LIBS: ${OpenRM_LIBS}")
+message(STATUS "DPRM_INCLUDE_DIRS: ${DPRM_INCLUDE_DIRS}")
+message(STATUS "DPRM_LIBS: ${DPRM_LIBS}")
 
 add_executable(uvc_lib uvc_lib.cpp)
 target_link_libraries(uvc_lib
-    ${OpenRM_LIBS}
+    ${DPRM_LIBS}
     ${OpenCV_LIBS}
     ${CERES_LIBRARIES}
 )

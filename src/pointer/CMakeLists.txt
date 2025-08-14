@@ -1,9 +1,9 @@
 add_library(
-    openrm_pointer
+    dprm_pointer
         SHARED
 )
 target_sources(
-    openrm_pointer
+    dprm_pointer
         PRIVATE
         ${CMAKE_SOURCE_DIR}/src/pointer/display.cpp
         ${CMAKE_SOURCE_DIR}/src/pointer/getter.cpp
@@ -15,8 +15,8 @@ target_sources(
         ${CMAKE_SOURCE_DIR}/src/pointer/color.cpp
 )
 target_include_directories(
-    openrm_pointer
+    dprm_pointer
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/openrm>
+        $<INSTALL_INTERFACE:include/dprm>
 )

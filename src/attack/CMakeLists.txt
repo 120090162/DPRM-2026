@@ -1,9 +1,9 @@
 add_library(
-    openrm_attack
+    dprm_attack
         SHARED
 )
 target_sources(
-    openrm_attack
+    dprm_attack
         PRIVATE
         ${CMAKE_SOURCE_DIR}/src/attack/attack.cpp
         ${CMAKE_SOURCE_DIR}/src/attack/deadlocker.cpp
@@ -12,8 +12,8 @@ target_sources(
         ${CMAKE_SOURCE_DIR}/src/attack/display.cpp
 )
 target_include_directories(
-    openrm_attack
+    dprm_attack
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/openrm>
+        $<INSTALL_INTERFACE:include/dprm>
 )

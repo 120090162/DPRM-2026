@@ -1,5 +1,5 @@
-#ifndef VENSION_H_IN
-#define VENSION_H_IN
+#ifndef __VENSION_H_IN__
+#define __VENSION_H_IN__
 
 #define DPRM_VERSION_MAJOR @DPRM_VERSION_MAJOR@
 #define DPRM_VERSION_MINOR @DPRM_VERSION_MINOR@
@@ -8,4 +8,4 @@
 
 #define BUILD_TIMESTAMP "@BUILD_TIMESTAMP@"
 
-#endif // VENSION_H_IN
+#endif // __VENSION_H_IN__

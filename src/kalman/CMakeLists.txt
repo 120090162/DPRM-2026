@@ -1,9 +1,9 @@
 add_library(
-    openrm_kalman
+    dprm_kalman
         SHARED
 )
 target_sources(
-    openrm_kalman
+    dprm_kalman
         PRIVATE
         # ${CMAKE_SOURCE_DIR}/src/kalman/antitopV1.cpp
         # ${CMAKE_SOURCE_DIR}/src/kalman/antitopV2.cpp
@@ -19,8 +19,8 @@ target_sources(
         ${CMAKE_SOURCE_DIR}/src/kalman/trajectoryV1.cpp
 )
 target_include_directories(
-    openrm_kalman
+    dprm_kalman
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/openrm>
+        $<INSTALL_INTERFACE:include/dprm>
 )

@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.15)
-project(OpenRM-terminal)
+project(DPRM-terminal)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE DEBUG)
 add_compile_options(-g -O0 -w -fno-omit-frame-pointer -Wno-notes)
 
-# OpenRM
-find_package(OpenRM REQUIRED)
-include_directories(${OpenRM_INCLUDE_DIRS})
+# DPRM
+find_package(DPRM REQUIRED)
+include_directories(${DPRM_INCLUDE_DIRS})
 
 # CUDA
 find_package(CUDA REQUIRED)
@@ -27,19 +27,19 @@ include_directories(${CERES_INCLUDE_DIRS})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(
-    openrm
+    dprm
         ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 target_link_libraries(
-    openrm
-        ${OpenRM_LIBS}
+    dprm
+        ${DPRM_LIBS}
         ${OpenCV_LIBS}
         ncurses
 )
 
 install(
     TARGETS
-        openrm
+        dprm
     RUNTIME DESTINATION
         bin
 )

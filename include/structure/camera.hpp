@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_CAMERA_HPP__
-#define __OPENRM_STRUCTURE_CAMERA_HPP__
+#ifndef __DPRM_STRUCTURE_CAMERA_HPP__
+#define __DPRM_STRUCTURE_CAMERA_HPP__
 #include <Eigen/Dense>
 #include <cstdint>
 #include <opencv2/opencv.hpp>

@@ -1,5 +1,5 @@
-#ifndef __OPENRM_STRUCTURE_SPEEDQUEUE_HPP__
-#define __OPENRM_STRUCTURE_SPEEDQUEUE_HPP__
+#ifndef __DPRM_STRUCTURE_SPEEDQUEUE_HPP__
+#define __DPRM_STRUCTURE_SPEEDQUEUE_HPP__
 #include <deque>
 #include <iostream>
 #include <vector>
