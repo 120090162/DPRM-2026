@@ -177,7 +177,10 @@ sudo ./run.sh -t
 # 学习记录
 [cmake使用](https://modern-cmake-cn.github.io/Modern-CMake-zh_CN/chapters/basics.html)
 [C++终端GUI使用](https://www.cnblogs.com/VeniVidiVici/p/17318232.html)
-[tensorrt使用](https://github.com/wdhao/tensorrtCV.git)
+[tensorrt使用](https://zhuanlan.zhihu.com/p/702631180)
+[tensorrt迁移yolov5使用](https://blog.csdn.net/qq_45983373/article/details/136636251)
+[tensorrt api迁移](https://docs.nvidia.com/deeplearning/tensorrt/latest/api/migration-guide.html#removed-c-api)
+[可视化模型](https://netron.app/)
 [yolov5迁移](https://github.com/wang-xinyu/tensorrtx/tree/trt10)
 [yolov5训练](https://github.com/Spphire/YOLOarmor-2022final)
 [上交自瞄参考1](https://github.com/Harry-hhj/CVRM2021-sjtu)

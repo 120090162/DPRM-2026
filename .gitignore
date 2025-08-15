@@ -4,3 +4,6 @@ demo/img/
 .vscode/
 .DS_Store
 *.log
+*.onnx
+*.engine
+*.pt

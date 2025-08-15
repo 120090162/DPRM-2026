@@ -19,12 +19,15 @@
 #include <NvInfer.h>
 #include <NvInferRuntime.h>
 #include <NvOnnxParser.h>
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <string>
 #include "structure/stamp.hpp"
 #include "tensorrt/logging.h"
 
 namespace rm {
 
+// TensorRT ONNX 模型解析和引擎构建
 bool initTrtOnnx(
     const std::string& onnx_file,
     const std::string& engine_file,
@@ -32,6 +35,7 @@ bool initTrtOnnx(
     unsigned int batch_size = 1U
 );
 
+// TensorRT 引擎初始化
 bool initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionContext** context);
 
 bool initCudaStream(cudaStream_t* stream);

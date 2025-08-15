@@ -22,6 +22,11 @@
 using namespace nvinfer1;
 using namespace nvonnxparser;
 
+// These are used to define input/output tensor names,
+// you can set them to whatever you want.
+const static char* kInputTensorName = "data";
+const static char* kOutputTensorName = "prob";
+
 bool rm::initTrtOnnx(
     const std::string& onnx_file,
     const std::string& engine_file,
@@ -36,7 +41,7 @@ bool rm::initTrtOnnx(
 
         // 创建 TensorRT 构建器
         Logger logger;
-        auto infer_builder = createInferBuilder(logger);
+        auto infer_builder = createInferBuilder(logger); //创建builder
         if (!infer_builder) {
             throw std::runtime_error("Failed to create TensorRT builder.");
         }
@@ -62,6 +67,7 @@ bool rm::initTrtOnnx(
         }
 
         // 创建推理引擎
+        // 创建config，用于定义一系列生成engine相关的设置，例如最大显存占用，浮点精度等
         auto config = infer_builder->createBuilderConfig();
         if (!config) {
             throw std::runtime_error("Failed to create TensorRT builder config.");
@@ -103,7 +109,7 @@ bool rm::initTrtOnnx(
         // 使用 buildSerializedNetwork 替代 buildEngineWithConfig
         IHostMemory* serialized_engine = infer_builder->buildSerializedNetwork(*network, *config);
         if (!serialized_engine)
-            throw std::runtime_error("Failed to build serialized engine.");
+            throw std::runtime_error("Failed to build TensorRT engine.");
 
         // 保存引擎文件
         std::ofstream file(engine_file, std::ios::binary);
@@ -133,9 +139,9 @@ bool rm::initTrtOnnx(
         // 释放资源（使用 delete 替代 destroy）
         delete parser; // 替代 parser->destroy()
         delete network; // 替代 network->destroy()
-        delete infer_builder; // 替代 infer_builder->destroy()
         delete config; // 替代 config->destroy()
         delete serialized_engine; // IHostMemory 仍需 destroy
+        delete infer_builder; // 替代 infer_builder->destroy()
 
         // 注意：engine 和 runtime 由执行上下文管理，不能在此销毁
         rm::message("TensorRT ONNX model parsed and engine built", rm::MSG_OK);
@@ -167,18 +173,18 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
 
         // 读取引擎文件
         std::ifstream file(engine_file, std::ios::binary);
-        if (!file.is_open()) {
+        if (!file.good()) {
             throw std::runtime_error("Failed to open engine file for reading.");
         }
 
-        size_t size = 0;
-        file.seekg(0, std::ios::end);
-        size = file.tellg();
-        file.seekg(0, std::ios::beg);
-        char* serialized_engine = new char[size];
-
-        file.read(serialized_engine, size);
-        file.close();
+        size_t size = 0; // 存储二进制文件字符的数量
+        file.seekg(0, std::ios::end); //将文件指针移动到文件末尾
+        size = file.tellg(); //获取当前文件指针的位置，即文件的大小
+        file.seekg(0, std::ios::beg); //文件指针移回文件开始处
+        char* serialized_engine = new char[size]; //分配足够的内存储存文件内容
+        assert(serialized_engine); //检查内存是否分配成功
+        file.read(serialized_engine, size); //读取文件信息，并存储在trtModelStream
+        file.close(); //关闭文件
 
         // 创建 TensorRT 运行时
         Logger logger;
@@ -188,33 +194,19 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
         }
 
         // 反序列化引擎
-        // auto engine = runtime->deserializeCudaEngine(serialized_engine, size, nullptr);
-        // if (!engine) {
-        //     throw std::runtime_error("Failed to deserialize TensorRT engine.");
-        // }
+        auto engine = runtime->deserializeCudaEngine(serialized_engine, size);
+        if (!engine) {
+            throw std::runtime_error("Failed to deserialize TensorRT engine.");
+        }
 
         // 创建推理上下文
-        // *context = engine->createExecutionContext();
-        // if (!(*context)) {
-        //     throw std::runtime_error("Failed to create TensorRT execution context.");
-        // }
+        *context = engine->createExecutionContext();
+        if (!(*context)) {
+            throw std::runtime_error("Failed to create TensorRT execution context.");
+        }
 
         // 释放资源
-        // delete[] serialized_engine;
-
-        // 移除 nullptr 参数
-        auto engine = runtime->deserializeCudaEngine(serialized_engine, size);
         delete[] serialized_engine;
-
-        if (!engine)
-            throw std::runtime_error("Failed to deserialize engine.");
-
-        *context = engine->createExecutionContext();
-        if (!(*context))
-            throw std::runtime_error("Failed to create execution context.");
-
-        // runtime 可安全销毁（引擎已加载）
-        delete runtime;
 
         rm::message("TensorRT Engine OK", rm::MSG_OK);
         return true;
@@ -266,41 +258,11 @@ void rm::detectEnqueue(
     nvinfer1::IExecutionContext** context,
     cudaStream_t* stream
 ) {
-    if (!context || !*context) {
-        rm::message("Invalid TensorRT context", rm::MSG_ERROR);
-        return;
-    }
-
-    try {
-        // 获取引擎引用
-        auto& engine = (*context)->getEngine();
-
-        // 获取输入和输出绑定的名称
-        char const* input_name = "input";
-        char const* output_name = "output";
-
-        if (!input_name || !output_name) {
-            throw std::runtime_error("Failed to get binding names");
-        }
-
-        // 设置输入输出张量的地址
-        if (!(*context)->setTensorAddress(input_name, input_device_buffer)) {
-            throw std::runtime_error("Failed to set input tensor address");
-        }
-
-        if (!(*context)->setTensorAddress(output_name, output_device_buffer)) {
-            throw std::runtime_error("Failed to set output tensor address");
-        }
-
-        // 执行推理
-        if (!(*context)->enqueueV3(*stream)) {
-            throw std::runtime_error("Failed to enqueue inference");
-        }
-
-    } catch (const std::exception& e) {
-        std::string error_message = e.what();
-        rm::message("Detect Enqueue: " + error_message, rm::MSG_ERROR);
-    }
+    // input, output
+    (*context)->setInputTensorAddress(kInputTensorName, input_device_buffer);
+    (*context)->setOutputTensorAddress(kOutputTensorName, output_device_buffer);
+    (*context)->enqueueV3(*stream);
+    // cudaStreamSynchronize(*stream);
 }
 
 void rm::detectOutput(
