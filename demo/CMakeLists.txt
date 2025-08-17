@@ -40,12 +40,19 @@ target_link_libraries(uvc_lib
     ${CERES_LIBRARIES}
 )
 
+add_executable(hik_lib hik_lib.cpp)
+target_link_libraries(hik_lib
+    ${DPRM_LIBS}
+    ${OpenCV_LIBS}
+    ${CERES_LIBRARIES}
+)
+
 # tensorrt
 if(CUDA_FOUND)
     add_executable(tensorrt_demo tensorrt_demo.cpp)
     target_link_libraries(tensorrt_demo
         ${DPRM_LIBS}
     )
-    configure_file(best_cv.onnx
-                ${CMAKE_BINARY_DIR}/best_cv.onnx COPYONLY)
+#    configure_file(best_cv.onnx
+#                ${CMAKE_BINARY_DIR}/best_cv.onnx COPYONLY)
 endif()

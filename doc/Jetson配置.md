@@ -64,12 +64,12 @@ sudo chmod 644 /usr/include/curses.h
 ```
 - OpenCV 4.10.0 多版本并存安装
 参考：https://qengineering.eu/install-opencv-on-jetson-nano.html
-参考只能使用opencv 4.10.0：https://forums.developer.nvidia.com/t/opencv-4-8-0-with-contrib-fails-on-jetson-orin-nx-jetpack-6-2/327595
+* 参考只能使用opencv 4.10.0：https://forums.developer.nvidia.com/t/opencv-4-8-0-with-contrib-fails-on-jetson-orin-nx-jetpack-6-2/327595
 请注意在安装opencv之前需要设置power mode为MAXN SUPER模式
 ```bash
 sudo mkdir /usr/local/opencv4.10.0
 # 自瞄仓库
-git clone https://github.com/120090162/dp2026_auto_aim.git
+git clone https://github.com/120090162/DPRM-2026.git
 cd setup
 # check your memory first
 free -m
@@ -90,7 +90,12 @@ sudo rm -rf ~/opencv_contrib
 sudo rm ~/opencv.zip ~/opencv_contrib.zip
 ```
 - 海康威视驱动安装
-
+去[相机驱动](https://www.hikrobotics.com/cn/machinevision/service/download/)选linux的最新版：机器视觉工业相机客户端MVS V3.0.1 (Linux)
+```bash
+unzip MVS_STD_V3.0.1_241128.zip
+sudo dpkg -i MVS-3.0.1_aarch64_20241128.deb
+source ~/.bashrc
+```
 ---
 自瞄框架编译
 ```bash

@@ -68,6 +68,26 @@ bool setUVC(
 bool runUVC(Camera* camera, Locate* locate_ptr, int fps);
 bool closeUVC(Camera* camera);
 
+bool getHikCameraNum(int& num, int timeout_ms = 500, int max_tries = 5);
+bool setHikArgs(Camera* camera,
+                    double gain,
+                    double acquisition_frame_rate = 165.0,
+                    double exposure_time = 5000,
+                    const std::string& adc_bit_depth = "Bits_8",
+                    const std::string& pixel_format = "BayerRG8");
+
+bool openHik(
+    Camera* camera,
+    int device_num = 1,
+    float* yaw = nullptr,
+    float* pitch = nullptr,
+    float* roll = nullptr,
+    double exposure = 2000.0,
+    double gain = 15.0,
+    double fps = 200.0
+);
+bool closeHik();
+
 } // namespace rm
 
 #endif
