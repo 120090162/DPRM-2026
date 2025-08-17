@@ -184,6 +184,7 @@ export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
       python demo/mujoco/achilles/main_walk.py
 
 # 学习记录
+[海康威视图像转opencv](https://blog.51cto.com/u_15127647/4707382)
 [cmake使用](https://modern-cmake-cn.github.io/Modern-CMake-zh_CN/chapters/basics.html)
 [C++终端GUI使用](https://www.cnblogs.com/VeniVidiVici/p/17318232.html)
 [tensorrt使用](https://zhuanlan.zhihu.com/p/702631180)
