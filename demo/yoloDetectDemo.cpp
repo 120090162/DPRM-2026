@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     cudaStream_t detect_stream = cv::cuda::StreamAccessor::getStream(cv_stream);
     
     // ====================== 新增: 绑定 TensorRT 输入输出缓冲区 ======================
-    auto* engine = armor_context->getEngine();
+    nvinfer1::ICudaEngine engine = armor_context->getEngine();
     const char* input_name = "images";
     const char* output_name = "output0";
 
