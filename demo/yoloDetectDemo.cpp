@@ -1,3 +1,29 @@
+// 总结：TensorRT API的“代沟”问题
+// 问题的根源在于，TensorRT从早期版本（如v7, v8）到现代版本（v9, v10）进行了一次重要的API设计哲学变更。您的C++代码（特别是rm库）遵循的是旧版逻辑，而在新版环境中运行时，虽然编译能通过，但无法正确执行。
+// 错误 1: 获取张量形状 (Shape) 的方式
+// 旧版API (get_binding_shape):
+// 工作方式: 通过一个整数索引（index）来引用输入/输出张量，例如 engine->getBindingDimensions(0)。
+// 缺点: 这种方式是“脆弱”的。如果模型的输入输出顺序发生变化，或者增加了新的输入/输出，代码中的索引就可能指向错误的张量，导致难以察觉的bug。
+// 新版API (get_tensor_shape):
+// 工作方式: 通过一个字符串名称（name）来引用张量，例如 engine->getTensorShape("images")。
+// 优点: 这种方式非常稳健和自文档化。无论模型内部如何排序，只要张量名称不变，代码就能准确地找到它，大大提高了代码的可读性和可靠性。
+// 对您C++代码的影响:
+// 您的C++代码很可能仍在使用基于索引的旧方法来获取输入/输出缓冲区的大小。在新版API中，虽然旧函数可能为了兼容性依然存在，但推荐使用新方法。我们Python脚本的第一个错误正是因为get_binding_shape函数在新API中已被移除或重命名。
+// 错误 2: 执行推理 (Execution) 的工作流程
+// 这是导致您“输出为零”的最核心原因。
+// 旧版API (enqueueV2, execute_async + bindings):
+// 工作方式: 在每次执行推理时，通过一个 bindings 数组（一个存放GPU内存地址指针的数组）来告诉引擎“这次推理请用这些内存地址作为输入和输出”。
+// 流程: 准备数据 -> 准备bindings数组 -> 调用enqueue(bindings)。
+// 新版API (set_tensor_address + enqueueV3 / execute_async_v3):
+// 工作方式: 采用“一次性设置，多次运行”的模式。
+// 配置阶段: 在创建执行上下文(IExecutionContext)后，就提前通过 context->setInputTensorAddress("images", ...) 和 context->setOutputTensorAddress("output0", ...) 将GPU内存地址与张量名称永久绑定。
+// 运行阶段: 之后每次执行推理，只需简单调用 context->enqueueV3(stream) 即可。引擎已经“记住”了数据该从哪里读、结果该往哪里写。
+// 优点: 减少了每次调用的参数传递，API更清晰，也可能带来微小的性能提升。
+// 对您C++代码的影响 (“静默失败”的原因):
+// 您的C++代码在主循环前调用了 setInputTensorAddress 和 setOutputTensorAddress，这符合新版API的规范，这一步是正确的。
+// 但是，在主循环内调用的 armor_context->enqueueV3(detect_stream) 很可能是一个被rm库封装过的、内部实现不正确的函数，或者您使用的enqueueV3版本与新API的期望不符。
+// 新版enqueueV3期望地址已被预先绑定，所以它不再接受一个bindings数组。如果您的代码（或库）仍在尝试以旧方式调用它，或者在创建上下文时没有正确地完成所有设置，TensorRT引擎就不会报错，因为它收到了一个合法的“执行”指令。但由于它不知道具体要在哪个内存地址上工作（或者配置是无效的），它实际上什么也没做，最终导致您从GPU拷贝回来的输出缓冲区里全是初始的零。
+
 #include <iostream>
 #include <string>
 #include <vector>
