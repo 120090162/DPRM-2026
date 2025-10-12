@@ -16,10 +16,6 @@
 #include "opencv2/cudawarping.hpp"
 #include "opencv2/cudaarithm.hpp"
 #include "opencv2/cudaimgproc.hpp"
-// ==========================================================
-//                     *** 修正点 2.1 ***
-//     包含这个头文件以访问 OpenCV Stream 的底层句柄
-// ==========================================================
 #include "opencv2/core/cuda_stream_accessor.hpp"
 
 // TensorRT
@@ -42,12 +38,12 @@ using namespace nvinfer1;
 
 // --- 模型参数 ---
 const std::string YOLO_TYPE         = "V5";
-const int         INFER_WIDTH       = 640;
-const int         INFER_HEIGHT      = 640;
-const int         CLASS_NUM         = 8;
+const int         INFER_WIDTH       = 416;
+const int         INFER_HEIGHT      = 416;
+const int         CLASS_NUM         = 14;
 const int         LOCATE_NUM        = 4;
 const int         COLOR_NUM         = 1;
-const int         BBOXES_NUM        = 25200;
+const int         BBOXES_NUM        = 10647;
 const double      CONFIDENCE_THRESH = 0.4;
 const double      NMS_THRESH        = 0.5;
 
@@ -75,22 +71,51 @@ void draw_bboxes(cv::Mat& image, const std::vector<rm::YoloRect>& bboxes) {
 }
 
 
-int main() {
-    // 1. 加载 TensorRT 模型
-    nvinfer1::IExecutionContext* armor_context = nullptr;
-    std::string onnx_file = "./best_cv.onnx";
-    std::string engine_file = "model.engine";
+// ==========================================================
+//                     *** 修改点 1 ***
+//              修改 main 函数签名以接收命令行参数
+// ==========================================================
+int main(int argc, char* argv[]) {
+    // ==========================================================
+    //                     *** 修改点 2 ***
+    //            检查命令行参数数量并提供使用说明
+    // ==========================================================
+    if (argc != 2) {
+        std::cerr << "错误：需要提供模型文件路径！" << std::endl;
+        std::cerr << "用法: " << argv[0] << " <path_to_your_model.onnx>" << std::endl;
+        return -1;
+    }
 
+    // ==========================================================
+    //                     *** 修改点 3 ***
+    //      从命令行参数获取ONNX文件路径，并自动生成引擎路径
+    // ==========================================================
+    std::string onnx_file = argv[1];
+    std::string engine_file = onnx_file;
+    size_t dot_pos = engine_file.rfind(".onnx");
+    if (dot_pos != std::string::npos) {
+        engine_file.replace(dot_pos, 5, ".engine");
+    } else {
+        engine_file += ".engine"; // 如果不以.onnx结尾，则直接附加.engine
+    }
+
+    std::cout << "ONNX model file: " << onnx_file << std::endl;
+    std::cout << "TensorRT engine file: " << engine_file << std::endl;
+
+
+    // 1. 加载 TensorRT 模型 (现在使用来自参数的路径)
+    nvinfer1::IExecutionContext* armor_context = nullptr;
     rm::message("Loading YOLO model...", rm::MSG_NOTE);
     if (access(engine_file.c_str(), F_OK) == 0) {
         if (!rm::initTrtEngine(engine_file, &armor_context)) return -1;
     } else if (access(onnx_file.c_str(), F_OK) == 0) {
         if (!rm::initTrtOnnx(onnx_file, engine_file, &armor_context, 1U)) return -1;
     } else {
-        rm::message("No model file found!", rm::MSG_ERROR);
+        rm::message("Model file not found at: " + onnx_file, rm::MSG_ERROR);
         return -1;
     }
     rm::message("YOLO model loaded successfully.", rm::MSG_OK);
+
 
     // 2. 分配 CUDA 内存并设置 Stream
     size_t yolo_struct_size = sizeof(float) * (LOCATE_NUM + 1 + COLOR_NUM + CLASS_NUM);
@@ -101,21 +126,12 @@ int main() {
 
     armor_output_host_buffer = new float[BBOXES_NUM * (yolo_struct_size / sizeof(float))];
     
-    // ==========================================================
-    //                     *** 修正点 1 ***
-    //           使用 reinterpret_cast 进行类型转换
-    // ==========================================================
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&armor_input_device_buffer), 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float)));
     CUDA_CHECK(cudaMalloc(&armor_output_device_buffer, BBOXES_NUM * yolo_struct_size));
     
-    // ==========================================================
-    //                     *** 修正点 2.2 ***
-    //    让 OpenCV 创建 Stream，然后我们获取它的原生句柄
-    // ==========================================================
     cv::cuda::Stream cv_stream;
     cudaStream_t detect_stream = cv::cuda::StreamAccessor::getStream(cv_stream);
     
-    // TensorRT 的输入输出缓冲区
     void* buffers[2] = {armor_input_device_buffer, armor_output_device_buffer};
     rm::message("CUDA buffers and stream initialized.", rm::MSG_NOTE);
 
@@ -162,7 +178,7 @@ int main() {
         
         cv::Mat float_cpu;
         float_gpu.download(float_cpu, cv_stream);
-        cv_stream.waitForCompletion(); // 确保 download 完成
+        cv_stream.waitForCompletion();
 
         cv::Mat blob = cv::dnn::blobFromImage(float_cpu);
         CUDA_CHECK(cudaMemcpyAsync(armor_input_device_buffer, blob.data, 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float), cudaMemcpyHostToDevice, detect_stream));
@@ -174,7 +190,7 @@ int main() {
         detectOutput(
             armor_output_host_buffer,
             static_cast<float*>(armor_output_device_buffer),
-            &detect_stream, // detectOutput 需要一个 cudaStream_t*
+            &detect_stream,
             yolo_struct_size,
             BBOXES_NUM
         );
@@ -206,8 +222,6 @@ int main() {
     CUDA_CHECK(cudaFree(armor_input_device_buffer));
     CUDA_CHECK(cudaFree(armor_output_device_buffer));
     delete[] armor_output_host_buffer;
-    
-    // 不需要手动销毁 detect_stream，cv_stream 的析构函数会自动处理
     
     rm::message("Cleanup complete. Exiting.", rm::MSG_NOTE);
     return 0;
