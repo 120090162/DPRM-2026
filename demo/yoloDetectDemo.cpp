@@ -390,7 +390,7 @@ int main(int argc, char* argv[]) {
 
         // --- 执行模型推理 ---
         // 异步执行推理
-        if (!rm::detectInference(armor_context, detect_stream)) {
+        if (!rm::detectEnqueue(armor_context, detect_stream)) {
             rm::message("TensorRT inference failed!", rm::MSG_ERROR);
             break;
         }

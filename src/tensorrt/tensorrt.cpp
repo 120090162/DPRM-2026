@@ -252,25 +252,27 @@ bool rm::initCudaStream(cudaStream_t* stream) {
 //     (*context)->enqueueV2((void**)device_buffer, *stream, nullptr);
 // }
 
-void rm::detectEnqueue(
-    float* input_device_buffer,
-    float* output_device_buffer,
-    nvinfer1::IExecutionContext** context,
-    cudaStream_t* stream
-) {
-    // input, output
-    (*context)->setInputTensorAddress(kInputTensorName, input_device_buffer);
-    (*context)->setOutputTensorAddress(kOutputTensorName, output_device_buffer);
-    (*context)->enqueueV3(*stream);
-    // cudaStreamSynchronize(*stream);
-}
+// void rm::detectEnqueue(
+//     float* input_device_buffer,
+//     float* output_device_buffer,
+//     nvinfer1::IExecutionContext** context,
+//     cudaStream_t* stream
+// ) {
+//     // input, output
+//     (*context)->setInputTensorAddress(kInputTensorName, input_device_buffer);
+//     (*context)->setOutputTensorAddress(kOutputTensorName, output_device_buffer);
+//     (*context)->enqueueV3(*stream);
+//     // cudaStreamSynchronize(*stream);
+// }
+
+
 /**
  * @brief 使用预先绑定好的缓冲区，异步执行TensorRT推理。
  * @param context 指向 IExecutionContext 的指针。
  * @param stream CUDA流。
  * @return 如果成功将推理任务加入队列，则返回 true，否则返回 false。
  */
-bool rm::detectInference(nvinfer1::IExecutionContext* context, cudaStream_t stream) {
+bool rm::detectEnqueue(nvinfer1::IExecutionContext* context, cudaStream_t stream) {
     if (!context) {
         // 安全检查，防止传入空的上下文
         return false;
