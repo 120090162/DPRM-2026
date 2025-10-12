@@ -204,9 +204,9 @@ int main(int argc, char* argv[]) {
     // 3. 分配CUDA内存并设置Stream
     // 定义模型输出的每个预测框的结构大小
     const int LOCATE_NUM = 4; // 边界框坐标 (x, y, w, h)
-    const int COLOR_NUM = 1;  // 置信度
-    // 每个预测框的总数据大小 = 坐标(4) + 置信度(1) + 预留(1) + 类别分数(class_num)
-    size_t yolo_struct_size = sizeof(float) * (LOCATE_NUM + 1 + COLOR_NUM + params.class_num);
+    // 您可以保留COLOR_NUM的定义，但不要在计算中使用它，或者直接删掉它
+    const int COLOR_NUM = 1;
+    size_t yolo_struct_size = sizeof(float) * (LOCATE_NUM + 1 + params.class_num); // 移除了 "+ COLOR_NUM"
     
     // --- 分配内存 ---
     float* armor_output_host_buffer = nullptr;   // 主机(CPU)内存，用于存放从GPU传回的推理结果
