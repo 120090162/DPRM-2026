@@ -222,6 +222,12 @@ int main(int argc, char* argv[]) {
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     cv::resizeWindow(window_name, 960, 720);
 
+    // [新增] 为预处理后的图像创建调试窗口
+    const std::string debug_window_name = "Preprocessed Input (416x416)";
+    cv::namedWindow(debug_window_name, cv::WINDOW_NORMAL);
+    cv::resizeWindow(debug_window_name, 416, 416); // [修改] 使用正确的窗口名
+
+
     cv::cuda::GpuMat gpu_frame, resized_gpu, float_gpu;
     auto frame_wait_tp = getTime();
     while (true) {
