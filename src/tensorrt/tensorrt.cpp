@@ -264,7 +264,20 @@ void rm::detectEnqueue(
     (*context)->enqueueV3(*stream);
     // cudaStreamSynchronize(*stream);
 }
-
+/**
+ * @brief 使用预先绑定好的缓冲区，异步执行TensorRT推理。
+ * @param context 指向 IExecutionContext 的指针。
+ * @param stream CUDA流。
+ * @return 如果成功将推理任务加入队列，则返回 true，否则返回 false。
+ */
+bool rm::detectInference(nvinfer1::IExecutionContext* context, cudaStream_t stream) {
+    if (!context) {
+        // 安全检查，防止传入空的上下文
+        return false;
+    }
+    // 直接调用 enqueueV3，它会使用之前在主程序中设置好的地址
+    return context->enqueueV3(stream);
+}
 void rm::detectOutput(
     float* output_host_buffer,
     const float* output_device_buffer,
