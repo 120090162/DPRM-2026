@@ -45,7 +45,7 @@ const int         LOCATE_NUM        = 4;
 const int         COLOR_NUM         = 1; // 假设有1个颜色值
 const int         BBOXES_NUM        = 10647; // 10647
 const double      CONFIDENCE_THRESH = 0.1;
-const double      NMS_THRESH        = 0.1;
+const double      NMS_THRESH        = 0.8;
 
 const std::vector<std::string> CLASS_NAMES = {"B1","B2","B3","B4","B5","BHero","R1","R2","R3","R4","R5","RHero","RQS","BQS"};
 
@@ -194,6 +194,9 @@ int main(int argc, char* argv[]) {
             CONFIDENCE_THRESH, NMS_THRESH, frame->width, frame->height,
             INFER_WIDTH, INFER_HEIGHT
         );
+
+        // 在这里添加打印语句！
+        std::cout << "Detected boxes count after NMS: " << frame->yolo_list.size() << std::endl;
         
         // --- 绘制和显示 ---
         if (!frame->yolo_list.empty()) {
