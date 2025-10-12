@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
         // --- 获取输出 ---
         detectOutput(
             armor_output_host_buffer,
-            armor_output_device_buffer,
+            static_cast<const float*>(armor_output_device_buffer), // 这里必须传递 float* ，否则会出错
             &detect_stream,
             yolo_struct_size,
             params.bboxes_num
