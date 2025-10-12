@@ -27,7 +27,7 @@
         cudaError_t err = call;                                          \
         if (err != cudaSuccess) {                                        \
             std::cerr << "CUDA error at " << __FILE__ << ":" << __LINE__ \
-                      << " - " << cudaGetErrorString(err) << std::endl;  \
+                        << " - " << cudaGetErrorString(err) << std::endl;  \
             exit(EXIT_FAILURE);                                          \
         }                                                                \
     } while (0)
@@ -47,10 +47,7 @@ const int         BBOXES_NUM        = 10647;
 const double      CONFIDENCE_THRESH = 0.4;
 const double      NMS_THRESH        = 0.5;
 
-const std::vector<std::string> CLASS_NAMES = {
-    "car", "watcher", "base", "armor_b2", "armor_r2", "armor_b3",
-    "armor_r3", "armor_b4"
-};
+const std::vector<std::string> CLASS_NAMES = {"B1","B2","B3","B4","B5","BHero","R1","R2","R3","R4","R5","RHero","RQS","BQS"};
 
 // 绘制检测框函数
 void draw_bboxes(cv::Mat& image, const std::vector<rm::YoloRect>& bboxes) {
@@ -71,25 +68,13 @@ void draw_bboxes(cv::Mat& image, const std::vector<rm::YoloRect>& bboxes) {
 }
 
 
-// ==========================================================
-//                     *** 修改点 1 ***
-//              修改 main 函数签名以接收命令行参数
-// ==========================================================
 int main(int argc, char* argv[]) {
-    // ==========================================================
-    //                     *** 修改点 2 ***
-    //            检查命令行参数数量并提供使用说明
-    // ==========================================================
     if (argc != 2) {
         std::cerr << "错误：需要提供模型文件路径！" << std::endl;
         std::cerr << "用法: " << argv[0] << " <path_to_your_model.onnx>" << std::endl;
         return -1;
     }
 
-    // ==========================================================
-    //                     *** 修改点 3 ***
-    //      从命令行参数获取ONNX文件路径，并自动生成引擎路径
-    // ==========================================================
     std::string onnx_file = argv[1];
     std::string engine_file = onnx_file;
     size_t dot_pos = engine_file.rfind(".onnx");
