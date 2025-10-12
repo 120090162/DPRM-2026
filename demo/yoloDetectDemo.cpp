@@ -44,8 +44,8 @@ const int         CLASS_NUM         = 14;
 const int         LOCATE_NUM        = 4;
 const int         COLOR_NUM         = 1; // 假设有1个颜色值
 const int         BBOXES_NUM        = 10647; // 10647
-const double      CONFIDENCE_THRESH = 0.4;
-const double      NMS_THRESH        = 0.5;
+const double      CONFIDENCE_THRESH = 0.1;
+const double      NMS_THRESH        = 0.1;
 
 const std::vector<std::string> CLASS_NAMES = {"B1","B2","B3","B4","B5","BHero","R1","R2","R3","R4","R5","RHero","RQS","BQS"};
 
