@@ -266,6 +266,7 @@ bool rm::initCudaStream(cudaStream_t* stream) {
 // }
 
 
+// 其实这个函数名字应该是detectInference，但是为了兼容旧版本，保留了detectEnqueue
 /**
  * @brief 使用预先绑定好的缓冲区，异步执行TensorRT推理。
  * @param context 指向 IExecutionContext 的指针。

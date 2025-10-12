@@ -40,11 +40,9 @@ bool initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionContext**
 
 bool initCudaStream(cudaStream_t* stream);
 
-void detectEnqueue(
-    float* input_device_buffer,
-    float* output_device_buffer,
-    nvinfer1::IExecutionContext** context,
-    cudaStream_t* stream
+bool detectEnqueue(
+    nvinfer1::IExecutionContext* context,
+    cudaStream_t stream
 );
 
 void detectOutput(
