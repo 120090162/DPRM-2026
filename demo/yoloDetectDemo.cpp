@@ -25,12 +25,12 @@ using namespace nvinfer1;
 // --- 模型参数 (从您的 detector_baseline_thread 代码中提取) ---
 // 假设这是YOLOv5模型的参数
 const std::string YOLO_TYPE         = "V5";
-const int         INFER_WIDTH       = 640;    // 推理宽度
-const int         INFER_HEIGHT      = 640;    // 推理高度
-const int         CLASS_NUM         = 8;      // 类别数量
+const int         INFER_WIDTH       = 416;    // 推理宽度
+const int         INFER_HEIGHT      = 416;    // 推理高度
+const int         CLASS_NUM         = 14;      // 类别数量
 const int         LOCATE_NUM        = 4;      // 定位信息数量 (box)
 const int         COLOR_NUM         = 1;      // 颜色信息数量 (假设)
-const int         BBOXES_NUM        = 25200;  // V5在640x640下的输出框数量
+const int         BBOXES_NUM        = 10647;  // V5在640x640下的输出框数量
 const double      CONFIDENCE_THRESH = 0.4;    // 置信度阈值
 const double      NMS_THRESH        = 0.5;    // NMS阈值
 
@@ -73,7 +73,7 @@ int main() {
     // 1. 加载 TensorRT 模型 (来自 tensor_load.cpp)
     // ====================================================================
     nvinfer1::IExecutionContext* armor_context = nullptr;
-    std::string onnx_file = "./best_cv.onnx";
+    std::string onnx_file = "./best.onnx";
     std::string engine_file = "model.engine";
 
     rm::message("Loading YOLO model...", rm::MSG_NOTE);
