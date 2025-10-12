@@ -133,12 +133,20 @@ bool rm::initTrtOnnx(
         if (!(*context))
             throw std::runtime_error("Failed to create execution context.");
 
-        // 释放资源（使用 delete 替代 destroy）
-        delete parser; // 替代 parser->destroy()
-        delete network; // 替代 network->destroy()
-        delete config; // 替代 config->destroy()
-        delete serialized_engine; // IHostMemory 仍需 destroy
-        delete infer_builder; // 替代 infer_builder->destroy()
+        // // 释放资源（使用 delete 替代 destroy）
+        // delete parser; // 替代 parser->destroy()
+        // delete network; // 替代 network->destroy()
+        // delete config; // 替代 config->destroy()
+        // delete serialized_engine; // IHostMemory 仍需 destroy
+        // delete infer_builder; // 替代 infer_builder->destroy()
+
+        // 释放资源（！！！关键修改！！！）
+        parser->destroy();              // 必须用 destroy()
+        network->destroy();             // 必须用 destroy()
+        config->destroy();              // 必须用 destroy()
+        serialized_engine->destroy();   // IHostMemory 也用 destroy()
+        infer_builder->destroy();       // 必须用 destroy()
+        // engine 和 runtime 不需要手动销毁，它们会被 context 管理或者在程序结束时自动处理
 
         // 注意：engine 和 runtime 由执行上下文管理，不能在此销毁
         rm::message("TensorRT ONNX model parsed and engine built", rm::MSG_OK);
@@ -212,13 +220,13 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
     } catch (const std::exception& e) {
         std::string error_message = e.what();
         rm::message("TensoRT Engine : " + error_message, rm::MSG_ERROR);
-        // if (*context) {
-        //     (*context)->destroy();
-        // }
         if (*context) {
-            delete *context; // 替代 destroy()
-            *context = nullptr;
+            (*context)->destroy();
         }
+        // if (*context) {
+        //     delete *context; // 替代 destroy()
+        //     *context = nullptr;
+        // }
         return false;
     }
 }
