@@ -111,9 +111,7 @@ int main(int argc, char* argv[]) {
     cudaStream_t detect_stream = cv::cuda::StreamAccessor::getStream(cv_stream);
     
     // ====================== 新增: 绑定 TensorRT 输入输出缓冲区 ======================
-    auto engine = armor_context->getEngine();
-    // 假设您的模型输入张量名字是 "images"，输出是 "output0"
-    // 这是YOLOv5导出的ONNX模型的标准名称。如果不是，您需要用Netron等工具查看并修改它们。
+    auto* engine = armor_context->getEngine();
     const char* input_name = "images";
     const char* output_name = "output0";
 
@@ -185,7 +183,7 @@ int main(int argc, char* argv[]) {
         // --- 获取输出 ---
         detectOutput(
             armor_output_host_buffer,
-            armor_output_device_buffer, // 这里传递 void* 就可以
+            static_cast<const float*>(armor_output_device_buffer), // 这里必须传递 float* ，否则会出错
             &detect_stream,
             yolo_struct_size,
             BBOXES_NUM
