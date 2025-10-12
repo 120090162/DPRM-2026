@@ -403,7 +403,7 @@ break; // 直接退出循环
 
         // --- 获取输出 ---
         // 将推理结果从设备(GPU)拷贝回主机(CPU)的缓冲区
-        detectOutput(
+        rm::detectOutput(
             armor_output_host_buffer,
             static_cast<const float*>(armor_output_device_buffer), // 必须传递 float* 类型
             &detect_stream,
@@ -457,7 +457,7 @@ cudaStreamSynchronize(detect_stream);
         
         // --- NMS 后处理 ---
         // 在CPU上对模型的原始输出进行解析和非极大值抑制，得到最终的检测框列表
-        frame->yolo_list = yoloArmorNMS_V5(
+        frame->yolo_list = rm::yoloArmorNMS_V5(
             armor_output_host_buffer, params.bboxes_num, params.class_num,
             params.conf_thresh, params.nms_thresh, frame->width, frame->height, // 原始图像尺寸
             params.infer_width, params.infer_height // 推理时图像尺寸
