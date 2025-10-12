@@ -1,48 +1,48 @@
-// #include <dprm/dprm.h>
-// #include <chrono>
-// #include <iostream>
-// #include <opencv2/opencv.hpp>
-// #include <thread>
-// using namespace std;
+#include <dprm/dprm.h>
+#include <chrono>
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <thread>
+using namespace std;
 
-// int main() {
-//     std::vector<std::string> device_list;
-//     // rm::listUVC(device_list, "usb_cam_");
-//     rm::listUVC(device_list, "video");
-//     if (device_list.empty()) {
-//         std::cout << "No UVC devices found." << std::endl;
-//         return 1;
-//     }
+int main() {
+    std::vector<std::string> device_list;
+    // rm::listUVC(device_list, "usb_cam_");
+    rm::listUVC(device_list, "video");
+    if (device_list.empty()) {
+        std::cout << "No UVC devices found." << std::endl;
+        return 1;
+    }
 
-//     std::cout << "Found " << device_list.size() << " UVC devices:" << std::endl;
-//     std::vector<rm::Camera*> cameras;
-//     std::vector<TimePoint> tp;
+    std::cout << "Found " << device_list.size() << " UVC devices:" << std::endl;
+    std::vector<rm::Camera*> cameras;
+    std::vector<TimePoint> tp;
 
-//     for (int i = 0; i < device_list.size(); i++) {
-//         rm::Camera* camera = new rm::Camera();
-//         rm::openUVC(camera, 1920, 1080, 30, 24, device_list[i]);
-//         rm::runUVC(camera, nullptr, 30);
-//         cameras.push_back(camera);
-//         TimePoint tp0 = getTime();
-//         tp.push_back(tp0);
-//     }
+    for (int i = 0; i < device_list.size(); i++) {
+        rm::Camera* camera = new rm::Camera();
+        rm::openUVC(camera, 1920, 1080, 30, 24, device_list[i]);
+        rm::runUVC(camera, nullptr, 30);
+        cameras.push_back(camera);
+        TimePoint tp0 = getTime();
+        tp.push_back(tp0);
+    }
 
-//     while (1) {
-//         for (int i = 0; i < cameras.size(); i++) {
-//             std::shared_ptr<rm::Frame> frame;
-//             frame = nullptr;
+    while (1) {
+        for (int i = 0; i < cameras.size(); i++) {
+            std::shared_ptr<rm::Frame> frame;
+            frame = nullptr;
 
-//             frame = cameras[i]->buffer->pop();
-//             while (frame == nullptr) {
-//                 frame = cameras[i]->buffer->pop();
-//             }
+            frame = cameras[i]->buffer->pop();
+            while (frame == nullptr) {
+                frame = cameras[i]->buffer->pop();
+            }
 
-//             TimePoint tp1 = getTime();
+            TimePoint tp1 = getTime();
 
-//             double dt = getDoubleOfS(tp[i], tp1);
-//             tp[i] = tp1;
+            double dt = getDoubleOfS(tp[i], tp1);
+            tp[i] = tp1;
 
-//             rm::print3d(i, dt, 1 / dt, "id", "dt", "fps");
-//         }
-//     }
-// }
+            rm::print3d(i, dt, 1 / dt, "id", "dt", "fps");
+        }
+    }
+}
