@@ -22,6 +22,23 @@
 using namespace nvinfer1;
 using namespace nvonnxparser;
 
+void print_engine_bindings(nvinfer1::ICudaEngine* engine) {
+    std::cout << "--- TensorRT Engine Bindings ---" << std::endl;
+    int num_bindings = engine->getNbBindings();
+    std::cout << "Number of bindings: " << num_bindings << std::endl;
+    for (int i = 0; i < num_bindings; ++i) {
+        std::cout << "Binding index: " << i << std::endl;
+        std::cout << "  Name: " << engine->getBindingName(i) << std::endl;
+        std::cout << "  Is input: " << (engine->bindingIsInput(i) ? "Yes" : "No") << std::endl;
+        nvinfer1::Dims dims = engine->getBindingDimensions(i);
+        std::cout << "  Dimensions: ";
+        for (int j = 0; j < dims.nbDims; ++j) {
+            std::cout << dims.d[j] << (j < dims.nbDims - 1 ? "x" : "");
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "----------------------------------" << std::endl;
+}
 bool rm::initTrtOnnx(
     const std::string& onnx_file,
     const std::string& engine_file,
