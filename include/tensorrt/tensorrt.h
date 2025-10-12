@@ -49,7 +49,7 @@ void detectOutput(
     float* output_host_buffer,
     const float* output_device_buffer,
     cudaStream_t* stream,
-    size_t output_struct_size,
+    size_t yolo_struct_size,
     int bboxes_num,
     int batch_size = 1
 );

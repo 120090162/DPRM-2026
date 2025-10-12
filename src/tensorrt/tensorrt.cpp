@@ -22,11 +22,6 @@
 using namespace nvinfer1;
 using namespace nvonnxparser;
 
-// These are used to define input/output tensor names,
-// you can set them to whatever you want.
-const static char* kInputTensorName = "data";
-const static char* kOutputTensorName = "prob";
-
 bool rm::initTrtOnnx(
     const std::string& onnx_file,
     const std::string& engine_file,
@@ -131,6 +126,8 @@ bool rm::initTrtOnnx(
         if (!engine)
             throw std::runtime_error("Failed to deserialize engine.");
 
+            print_engine_bindings(engine); // <--- 在这里添加调用
+
         // 创建执行上下文
         *context = engine->createExecutionContext();
         if (!(*context))
@@ -198,6 +195,7 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
         if (!engine) {
             throw std::runtime_error("Failed to deserialize TensorRT engine.");
         }
+        print_engine_bindings(engine); // <--- 在这里添加调用
 
         // 创建推理上下文
         *context = engine->createExecutionContext();
@@ -285,11 +283,12 @@ void rm::detectOutput(
     float* output_host_buffer,
     const float* output_device_buffer,
     cudaStream_t* stream,
-    size_t output_struct_size,
+    size_t yolo_struct_size,
     int bboxes_num,
     int batch_size
 ) {
-    size_t output_size = (output_struct_size * bboxes_num + 1) * batch_size;
+    // size_t output_size = (output_struct_size * bboxes_num + 1) * batch_size; 为什么+1？
+    size_t output_size = yolo_struct_size * bboxes_num * batch_size;
     cudaMemcpyAsync(
         output_host_buffer,
         output_device_buffer,
