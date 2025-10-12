@@ -27,7 +27,6 @@ if __name__ == "__main__":
     INFER_WIDTH = 416
     INFER_HEIGHT = 416
     
-    # --- 模型输入输出张量的名称 (必须与模型一致) ---
     INPUT_NAME = "images"
     OUTPUT_NAME = "output0"
     
@@ -51,23 +50,15 @@ if __name__ == "__main__":
     
     print("\n--- 步骤2: 分配主机(CPU)和设备(GPU)内存 ---")
     
-    # === API 变更：使用 get_tensor_shape 和 get_tensor_name ===
     try:
         input_shape = engine.get_tensor_shape(INPUT_NAME)
         output_shape = engine.get_tensor_shape(OUTPUT_NAME)
-        
-        # 绑定内存地址时仍然需要索引
-        input_idx = engine.get_tensor_location(INPUT_NAME)
-        output_idx = engine.get_tensor_location(OUTPUT_NAME)
-
     except Exception as e:
         print(f"错误: 无法获取模型输入/输出 '{INPUT_NAME}' 或 '{OUTPUT_NAME}' 的信息。")
-        print("请用 Netron 打开您的 .onnx 文件，确认输入输出张量的确切名称。")
-        print(f"具体错误: {e}")
         sys.exit(1)
 
-    print(f"输入张量 '{INPUT_NAME}' (索引 {input_idx}) 形状: {input_shape}")
-    print(f"输出张量 '{OUTPUT_NAME}' (索引 {output_idx}) 形状: {output_shape}")
+    print(f"输入张量 '{INPUT_NAME}' 形状: {input_shape}")
+    print(f"输出张量 '{OUTPUT_NAME}' 形状: {output_shape}")
 
     h_input = cuda.pagelocked_empty(trt.volume(input_shape), dtype=np.float32)
     h_output = cuda.pagelocked_empty(trt.volume(output_shape), dtype=np.float32)
@@ -76,18 +67,26 @@ if __name__ == "__main__":
     
     stream = cuda.Stream()
     print("内存分配完毕。")
+    
+    # === 最终修正：使用 set_tensor_address 提前绑定内存 ===
+    # 这与C++的 setInputTensorAddress / setOutputTensorAddress 行为一致
+    try:
+        context.set_tensor_address(INPUT_NAME, int(d_input))
+        context.set_tensor_address(OUTPUT_NAME, int(d_output))
+        print("成功将GPU内存地址绑定到输入/输出张量。")
+    except Exception as e:
+        print(f"绑定内存地址失败: {e}")
+        sys.exit(1)
 
     print(f"\n--- 步骤3: 预处理图像并执行推理 ---")
     input_data = preprocess(IMAGE_PATH, INFER_WIDTH, INFER_HEIGHT)
     np.copyto(h_input, input_data.ravel())
 
-    # 将设备内存地址存入一个列表
-    bindings = [0] * engine.num_io_tensors
-    bindings[input_idx] = int(d_input)
-    bindings[output_idx] = int(d_output)
-
     cuda.memcpy_htod_async(d_input, h_input, stream)
-    context.execute_async_v3(stream_handle=stream.handle, bindings=bindings) # 使用 v3 API
+    # === 最终修正：调用不带 bindings 参数的 execute_async_v3 ===
+    if not context.execute_async_v3(stream_handle=stream.handle):
+        print("执行推理失败 (execute_async_v3 returned False)")
+        sys.exit(1)
     cuda.memcpy_dtoh_async(h_output, d_output, stream)
     stream.synchronize()
     print("推理和数据拷贝完成。")
