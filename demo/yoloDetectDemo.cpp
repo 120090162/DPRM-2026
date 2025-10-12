@@ -241,6 +241,28 @@ int main(int argc, char* argv[]) {
         cv::cuda::resize(gpu_frame, resized_gpu, cv::Size(params.infer_width, params.infer_height), 0, 0, cv::INTER_LINEAR, cv_stream);
         cv::cuda::cvtColor(resized_gpu, resized_gpu, cv::COLOR_BGR2RGB, 0, cv_stream);
         resized_gpu.convertTo(float_gpu, CV_32F, 1.0/255.0, cv_stream);
+
+        // ======================= [新增] 调试代码块开始 =======================
+        {
+            cv::Mat preprocessed_cpu;
+            cv::cuda::GpuMat temp_gpu_for_display;
+
+            // 1. 将浮点型数据转换回 8-bit * 255
+            float_gpu.convertTo(temp_gpu_for_display, CV_8U, 255.0, cv_stream);
+
+            // 2. 将 RGB 转换回 BGR 以便 imshow 正确显示
+            cv::cuda::cvtColor(temp_gpu_for_display, temp_gpu_for_display, cv::COLOR_RGB2BGR, 0, cv_stream);
+
+            // 3. 从 GPU 下载到 CPU
+            temp_gpu_for_display.download(preprocessed_cpu, cv_stream);
+
+            // 4. 等待 CUDA stream 完成下载操作 (非常重要，否则 preprocessed_cpu 可能数据不完整)
+            cv_stream.waitForCompletion();
+
+            // 5. 显示图像
+            cv::imshow(debug_window_name, preprocessed_cpu);
+        }
+        // ======================= [新增] 调试代码块结束 =======================
         
         std::vector<cv::cuda::GpuMat> channels;
         cv::cuda::split(float_gpu, channels, cv_stream);
