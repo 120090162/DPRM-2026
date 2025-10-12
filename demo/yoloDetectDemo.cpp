@@ -14,17 +14,18 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 #include "opencv2/cudawarping.hpp"
-#include "opencv2/cudaarithm.hpp" // 用于GPU上的转换
+#include "opencv2/cudaarithm.hpp"
 #include "opencv2/cudaimgproc.hpp"
+// ==========================================================
+//                     *** 修正点 2.1 ***
+//     包含这个头文件以访问 OpenCV Stream 的底层句柄
+// ==========================================================
+#include "opencv2/core/cuda_stream_accessor.hpp"
 
 // TensorRT
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
 
-// ==========================================================
-//                     *** 修正点 1 ***
-//     在本文件中直接定义一个标准的 CUDA_CHECK 宏
-// ==========================================================
 #define CUDA_CHECK(call)                                                 \
     do {                                                                 \
         cudaError_t err = call;                                          \
@@ -34,7 +35,6 @@
             exit(EXIT_FAILURE);                                          \
         }                                                                \
     } while (0)
-
 
 // 使用必要的命名空间
 using namespace rm;
@@ -92,22 +92,32 @@ int main() {
     }
     rm::message("YOLO model loaded successfully.", rm::MSG_OK);
 
-    // 2. 分配 CUDA 内存
+    // 2. 分配 CUDA 内存并设置 Stream
     size_t yolo_struct_size = sizeof(float) * (LOCATE_NUM + 1 + COLOR_NUM + CLASS_NUM);
     
     float* armor_output_host_buffer = nullptr;
     void* armor_output_device_buffer = nullptr;
-    float* armor_input_device_buffer = nullptr; // 使用 float* 更明确
-    cudaStream_t detect_stream;
+    float* armor_input_device_buffer = nullptr;
 
     armor_output_host_buffer = new float[BBOXES_NUM * (yolo_struct_size / sizeof(float))];
-
-    CUDA_CHECK(cudaStreamCreate(&detect_stream));
-    CUDA_CHECK(cudaMalloc(&armor_input_device_buffer, 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float)));
+    
+    // ==========================================================
+    //                     *** 修正点 1 ***
+    //           使用 reinterpret_cast 进行类型转换
+    // ==========================================================
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&armor_input_device_buffer), 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float)));
     CUDA_CHECK(cudaMalloc(&armor_output_device_buffer, BBOXES_NUM * yolo_struct_size));
     
+    // ==========================================================
+    //                     *** 修正点 2.2 ***
+    //    让 OpenCV 创建 Stream，然后我们获取它的原生句柄
+    // ==========================================================
+    cv::cuda::Stream cv_stream;
+    cudaStream_t detect_stream = cv::cuda::StreamAccessor::getStream(cv_stream);
+    
+    // TensorRT 的输入输出缓冲区
     void* buffers[2] = {armor_input_device_buffer, armor_output_device_buffer};
-    rm::message("CUDA buffers allocated.", rm::MSG_NOTE);
+    rm::message("CUDA buffers and stream initialized.", rm::MSG_NOTE);
 
     // 3. 初始化 HIK 相机
     rm::message("Initializing HIK camera...", rm::MSG_NOTE);
@@ -130,15 +140,7 @@ int main() {
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     cv::resizeWindow(window_name, 960, 720);
 
-    // ==========================================================
-    //                     *** 修正点 2 ***
-    //  创建 OpenCV Stream 包装器来桥接 cudaStream_t
-    // ==========================================================
-    cv::cuda::Stream cv_stream = cv::cuda::Stream::createWithCudaStream(detect_stream);
-
-    // 为GPU预处理创建GpuMat对象
     cv::cuda::GpuMat gpu_frame, resized_gpu, float_gpu;
-
     auto frame_wait_tp = getTime();
     while (true) {
         std::shared_ptr<rm::Frame> frame = camera->buffer->pop();
@@ -155,16 +157,15 @@ int main() {
         // --- 图像预处理 (在GPU上完成) ---
         gpu_frame.upload(*frame->image, cv_stream);
         cv::cuda::resize(gpu_frame, resized_gpu, cv::Size(INFER_WIDTH, INFER_HEIGHT), 0, 0, cv::INTER_LINEAR, cv_stream);
-        // BGR uchar -> RGB float
         cv::cuda::cvtColor(resized_gpu, resized_gpu, cv::COLOR_BGR2RGB, 0, cv_stream);
         resized_gpu.convertTo(float_gpu, CV_32F, 1.0/255.0, cv_stream);
-        // 现在 float_gpu 是一个连续的内存块，但我们需要把它变成 HWC -> CHW 的格式
-        // 这一步通常需要一个自定义的CUDA核函数，或者在CPU上做。
-        // 为了让demo跑起来，我们先用CPU做转换，虽然会引入一次同步和拷贝，但能保证正确性
+        
         cv::Mat float_cpu;
         float_gpu.download(float_cpu, cv_stream);
-        cv::dnn::blobFromImage(float_cpu, float_cpu); // blobFromImage可以高效完成 HWC->CHW
-        CUDA_CHECK(cudaMemcpyAsync(armor_input_device_buffer, float_cpu.data, 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float), cudaMemcpyHostToDevice, detect_stream));
+        cv_stream.waitForCompletion(); // 确保 download 完成
+
+        cv::Mat blob = cv::dnn::blobFromImage(float_cpu);
+        CUDA_CHECK(cudaMemcpyAsync(armor_input_device_buffer, blob.data, 3 * INFER_WIDTH * INFER_HEIGHT * sizeof(float), cudaMemcpyHostToDevice, detect_stream));
 
         // --- 模型推理 ---
         armor_context->enqueueV3(detect_stream);
@@ -173,7 +174,7 @@ int main() {
         detectOutput(
             armor_output_host_buffer,
             static_cast<float*>(armor_output_device_buffer),
-            &detect_stream,
+            &detect_stream, // detectOutput 需要一个 cudaStream_t*
             yolo_struct_size,
             BBOXES_NUM
         );
@@ -205,7 +206,8 @@ int main() {
     CUDA_CHECK(cudaFree(armor_input_device_buffer));
     CUDA_CHECK(cudaFree(armor_output_device_buffer));
     delete[] armor_output_host_buffer;
-    CUDA_CHECK(cudaStreamDestroy(detect_stream));
+    
+    // 不需要手动销毁 detect_stream，cv_stream 的析构函数会自动处理
     
     rm::message("Cleanup complete. Exiting.", rm::MSG_NOTE);
     return 0;
