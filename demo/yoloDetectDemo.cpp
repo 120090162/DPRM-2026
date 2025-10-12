@@ -305,12 +305,6 @@ int main(int argc, char* argv[]) {
         }
         frame_wait_tp = getTime(); // 重置计时器
 
-        // !!! 新增代码：保存第一帧图像然后退出 !!!
-cv::imwrite("test_image.png", *frame->image);
-rm::message("Saved test_image.png successfully. Exiting for Python test.", rm::MSG_OK);
-break; // 直接退出循环
-// !!! 结束新增代码 !!!
-
         // --- 图像预处理 (在GPU上完成) ---
         // 1. 将CPU的cv::Mat上传到GPU的cv::cuda::GpuMat
         gpu_frame.upload(*frame->image, cv_stream);
