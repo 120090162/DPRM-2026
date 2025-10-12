@@ -341,6 +341,50 @@ int main(int argc, char* argv[]) {
             yolo_struct_size,
             params.bboxes_num
         );
+
+        //测试开始
+        // 【第一步：添加显式同步】确保数据已从GPU完全拷贝到CPU
+cudaStreamSynchronize(detect_stream);
+
+// 【第二步：插入诊断代码】
+{
+    float max_confidence = 0.0f;
+    int max_conf_box_index = -1;
+
+    // 遍历所有10647个预测框
+    for (int i = 0; i < params.bboxes_num; ++i) {
+        // 计算当前框数据的起始地址
+        // 每个框有 19 个 float: 4(box) + 1(conf) + 14(classes)
+        float* current_box_data = armor_output_host_buffer + i * (4 + 1 + params.class_num);
+        
+        // 第5个元素 (索引为4) 是物体置信度
+        float confidence = current_box_data[4];
+
+        if (confidence > max_confidence) {
+            max_confidence = confidence;
+            max_conf_box_index = i;
+        }
+    }
+
+    // 打印这一帧中找到的最高置信度
+    std::cout << "Max confidence in this frame: " << max_confidence << std::endl;
+
+    // 如果最高置信度不为0，打印该框的详细信息
+    if (max_conf_box_index != -1) {
+        std::cout << "--- Details for box with highest confidence ---" << std::endl;
+        float* best_box_data = armor_output_host_buffer + max_conf_box_index * 19;
+        std::cout << "Box Index: " << max_conf_box_index << std::endl;
+        std::cout << "Raw Coords (x,y,w,h): " << best_box_data[0] << ", " << best_box_data[1] << ", " << best_box_data[2] << ", " << best_box_data[3] << std::endl;
+        std::cout << "Objectness Confidence: " << best_box_data[4] << std::endl;
+        std::cout << "Class Scores: ";
+        for (int j = 0; j < params.class_num; ++j) {
+            std::cout << best_box_data[5 + j] << " ";
+        }
+        std::cout << "\n---------------------------------------------" << std::endl;
+    }
+}
+
+        //测试结束
         
         // --- NMS 后处理 ---
         // 在CPU上对模型的原始输出进行解析和非极大值抑制，得到最终的检测框列表
