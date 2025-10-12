@@ -53,6 +53,18 @@ if(CUDA_FOUND)
     target_link_libraries(tensorrt_demo
         ${DPRM_LIBS}
     )
-#    configure_file(best_cv.onnx
-#                ${CMAKE_BINARY_DIR}/best_cv.onnx COPYONLY)
+   configure_file(best.onnx
+               ${CMAKE_BINARY_DIR}/best.onnx COPYONLY)
+endif()
+
+# tensorrt
+if(CUDA_FOUND)
+    add_executable(yoloDetectDemo yoloDetectDemo.cpp)
+    target_link_libraries(yoloDetectDemo
+        ${DPRM_LIBS}
+        ${OpenCV_LIBS}
+        ${CERES_LIBRARIES}
+    )
+   configure_file(best.onnx
+               ${CMAKE_BINARY_DIR}/best.onnx COPYONLY)
 endif()
