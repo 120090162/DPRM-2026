@@ -325,6 +325,47 @@ int main(int argc, char* argv[]) {
         CUDA_CHECK(cudaMemcpyAsync(static_cast<char*>(armor_input_device_buffer) + params.infer_width * params.infer_height * sizeof(float), channels[1].data, params.infer_width * params.infer_height * sizeof(float), cudaMemcpyDeviceToDevice, detect_stream));
         CUDA_CHECK(cudaMemcpyAsync(static_cast<char*>(armor_input_device_buffer) + 2 * params.infer_width * params.infer_height * sizeof(float), channels[2].data, params.infer_width * params.infer_height * sizeof(float), cudaMemcpyDeviceToDevice, detect_stream));
 
+        // =======================> 在这里插入下面的诊断代码 <=======================
+
+// 【诊断开始】
+{
+    // 1. 创建一个临时的CPU(主机)缓冲区，大小与GPU输入缓冲区完全相同
+    size_t buffer_size = 3 * params.infer_width * params.infer_height;
+    float* host_input_check_buffer = new float[buffer_size];
+
+    // 2. 将GPU上的模型输入数据，拷贝回我们刚创建的CPU缓冲区
+    //    这里使用同步拷贝，确保数据传输完成后再继续
+    CUDA_CHECK(cudaMemcpy(host_input_check_buffer, armor_input_device_buffer, buffer_size * sizeof(float), cudaMemcpyDeviceToHost));
+
+    // 3. 检查这个缓冲区的内容
+    std::cout << "--- Checking final model input buffer ---" << std::endl;
+    
+    // 检查R通道的第一个像素值 (缓冲区开头)
+    std::cout << "First R pixel value: " << host_input_check_buffer[0] << std::endl;
+
+    // 检查G通道的第一个像素值 (缓冲区 1/3 处)
+    size_t green_channel_start_index = params.infer_width * params.infer_height;
+    std::cout << "First G pixel value: " << host_input_check_buffer[green_channel_start_index] << std::endl;
+
+    // 检查B通道的第一个像素值 (缓冲区 2/3 处)
+    size_t blue_channel_start_index = 2 * params.infer_width * params.infer_height;
+    std::cout << "First B pixel value: " << host_input_check_buffer[blue_channel_start_index] << std::endl;
+
+    // 4. 计算整个缓冲区的总和，看它是否为零
+    double total_sum = 0.0;
+    for (size_t i = 0; i < buffer_size; ++i) {
+        total_sum += host_input_check_buffer[i];
+    }
+    std::cout << "Sum of all values in input buffer: " << total_sum << std::endl;
+    std::cout << "------------------------------------------" << std::endl;
+
+    // 5. 释放临时缓冲区
+    delete[] host_input_check_buffer;
+}
+// 【诊断结束】
+
+
+
         // --- 执行模型推理 ---
         // 异步执行推理
         if (!armor_context->enqueueV3(detect_stream)) {
