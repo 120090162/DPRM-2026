@@ -127,8 +127,6 @@
         }
 
         // 2. 准备 TensorRT 引擎文件
-        // 自动生成 .engine 文件路径
-        / 2. 准备 TensorRT 引擎文件
 std::cout << "Debug: onnx_path from params: [" << params.onnx_path << "]" << std::endl;
 
 if (params.onnx_path.empty()) {
