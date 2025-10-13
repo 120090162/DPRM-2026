@@ -68,7 +68,7 @@ if(CUDA_FOUND)
         )
 
     add_executable(yolov5Tensorrt yolov5Tensorrt.cpp)
-        target_link_libraries(yoloDetect
+        target_link_libraries(yolov5Tensorrt
             ${DPRM_LIBS}
             ${OpenCV_LIBS}
             ${YOLOV5_TENSORRT_LIB}  # <-- 关键的链接
