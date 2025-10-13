@@ -21,24 +21,24 @@
 
 using namespace nvinfer1;
 using namespace nvonnxparser;
-
-void print_engine_bindings(nvinfer1::ICudaEngine* engine) {
-    std::cout << "--- TensorRT Engine Bindings ---" << std::endl;
-    int num_bindings = engine->getNbBindings();
-    std::cout << "Number of bindings: " << num_bindings << std::endl;
-    for (int i = 0; i < num_bindings; ++i) {
-        std::cout << "Binding index: " << i << std::endl;
-        std::cout << "  Name: " << engine->getBindingName(i) << std::endl;
-        std::cout << "  Is input: " << (engine->bindingIsInput(i) ? "Yes" : "No") << std::endl;
-        nvinfer1::Dims dims = engine->getBindingDimensions(i);
-        std::cout << "  Dimensions: ";
-        for (int j = 0; j < dims.nbDims; ++j) {
-            std::cout << dims.d[j] << (j < dims.nbDims - 1 ? "x" : "");
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "----------------------------------" << std::endl;
-}
+// 这段api全用旧的写了，有大问题
+// void print_engine_bindings(nvinfer1::ICudaEngine* engine) {
+//     std::cout << "--- TensorRT Engine Bindings ---" << std::endl;
+//     int num_bindings = engine->getNbBindings();
+//     std::cout << "Number of bindings: " << num_bindings << std::endl;
+//     for (int i = 0; i < num_bindings; ++i) {
+//         std::cout << "Binding index: " << i << std::endl;
+//         std::cout << "  Name: " << engine->getBindingName(i) << std::endl;
+//         std::cout << "  Is input: " << (engine->bindingIsInput(i) ? "Yes" : "No") << std::endl;
+//         nvinfer1::Dims dims = engine->getBindingDimensions(i);
+//         std::cout << "  Dimensions: ";
+//         for (int j = 0; j < dims.nbDims; ++j) {
+//             std::cout << dims.d[j] << (j < dims.nbDims - 1 ? "x" : "");
+//         }
+//         std::cout << std::endl;
+//     }
+//     std::cout << "----------------------------------" << std::endl;
+// }
 bool rm::initTrtOnnx(
     const std::string& onnx_file,
     const std::string& engine_file,
@@ -143,7 +143,7 @@ bool rm::initTrtOnnx(
         if (!engine)
             throw std::runtime_error("Failed to deserialize engine.");
 
-            print_engine_bindings(engine); // <--- 在这里添加调用
+            // print_engine_bindings(engine); // <--- 在这里添加调用
 
         // 创建执行上下文
         *context = engine->createExecutionContext();
@@ -151,18 +151,12 @@ bool rm::initTrtOnnx(
             throw std::runtime_error("Failed to create execution context.");
 
         // // 释放资源（使用 delete 替代 destroy）
-        // delete parser; // 替代 parser->destroy()
-        // delete network; // 替代 network->destroy()
-        // delete config; // 替代 config->destroy()
-        // delete serialized_engine; // IHostMemory 仍需 destroy
-        // delete infer_builder; // 替代 infer_builder->destroy()
+        delete parser; // 替代 parser->destroy()
+        delete network; // 替代 network->destroy()
+        delete config; // 替代 config->destroy()
+        delete serialized_engine; // IHostMemory 仍需 destroy
+        delete infer_builder; // 替代 infer_builder->destroy()
 
-        // 释放资源（！！！关键修改！！！）
-        parser->destroy();              // 必须用 destroy()
-        network->destroy();             // 必须用 destroy()
-        config->destroy();              // 必须用 destroy()
-        serialized_engine->destroy();   // IHostMemory 也用 destroy()
-        infer_builder->destroy();       // 必须用 destroy()
         // engine 和 runtime 不需要手动销毁，它们会被 context 管理或者在程序结束时自动处理
 
         // 注意：engine 和 runtime 由执行上下文管理，不能在此销毁
@@ -220,7 +214,7 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
         if (!engine) {
             throw std::runtime_error("Failed to deserialize TensorRT engine.");
         }
-        print_engine_bindings(engine); // <--- 在这里添加调用
+        // print_engine_bindings(engine); // <--- 在这里添加调用
 
         // 创建推理上下文
         *context = engine->createExecutionContext();
