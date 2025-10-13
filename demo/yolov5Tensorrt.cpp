@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
 
     cv::Mat frame_mat; // 用于存储从相机转换来的OpenCV图像
     std::vector<yolov5::Detection> detections;
-    auto frame_wait_tp = rm::getTime(); // 用于检测取流超时
+    auto frame_wait_tp = getTime(); // 用于检测取流超时
 
     std::cout << "开始实时检测... 按 'ESC' 键退出。" << std::endl;
     while (true) {
@@ -237,14 +237,14 @@ int main(int argc, char* argv[]) {
         
         // 检查帧是否有效
         if (frame_ptr == nullptr || !frame_ptr->image || frame_ptr->image->empty()) {
-            if (rm::getDoubleOfS(frame_wait_tp, rm::getTime()) > 2.0) { // 超过2秒未取到帧则报错
+            if (getDoubleOfS(frame_wait_tp, getTime()) > 2.0) { // 超过2秒未取到帧则报错
                 std::cerr << "错误: 图像捕获超时!" << std::endl;
                 break;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1)); // 稍作等待
             continue;
         }
-        frame_wait_tp = rm::getTime(); // 重置计时器
+        frame_wait_tp = getTime(); // 重置计时器
 
         // **关键转换**: 将 rm::Frame 中的图像数据转换为 cv::Mat
         // rm::Frame->image 本身就是一个 cv::Mat*，我们只需解引用即可
