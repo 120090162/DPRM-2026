@@ -72,6 +72,9 @@ if(CUDA_FOUND)
             ${DPRM_LIBS}
             ${OpenCV_LIBS}
             ${YOLOV5_TENSORRT_LIB}  # <-- 关键的链接
+        # **[关键修复]** 显式添加 TensorRT 动态库
+            nvinfer             # TensorRT Core (Runtime and Builder)
+            nvonnxparser        # TensorRT ONNX Parser
             cudart
         )
     add_executable(yoloDetectDemo yoloDetectDemo.cpp)
