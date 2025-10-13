@@ -1,5 +1,5 @@
 /**
- * @file main.cpp
+ * @file yolov5Tensorrt.cpp
  * @brief 使用 YOLOv5-TensorRT 和海康相机进行实时目标检测的示例程序。
  *
  * 该程序通过命令行参数接收ONNX模型路径和相关配置，
