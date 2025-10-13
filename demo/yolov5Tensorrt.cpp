@@ -117,40 +117,38 @@
     // ====================================================================================
     int main(int argc, char* argv[]) {
         // 1. 初始化与参数解析
-        AppParams params;
-        parse_arguments(argc, argv, params);
-        
-        if (params.onnx_path.empty()) {
-            std::cerr << "错误: 必须通过 -m 或 --model 提供模型路径。" << std::endl;
-            print_usage(argv[0]);
-            return -1;
-        }
+    AppParams params;
+    parse_arguments(argc, argv, params);
+    
+    if (params.onnx_path.empty()) {
+        std::cerr << "错误: 必须通过 -m 或 --model 提供模型路径。" << std::endl;
+        print_usage(argv[0]);
+        return -1;
+    }
 
-        // 2. 准备 TensorRT 引擎文件
-std::cout << "Debug: onnx_path from params: [" << params.onnx_path << "]" << std::endl;
+    if (!file_exists(params.onnx_path)) {
+        std::cerr << "错误: 提供的ONNX文件不存在: " << params.onnx_path << std::endl;
+        return -1;
+    }
 
-if (params.onnx_path.empty()) {
-    std::cerr << "错误: 模型路径为空，程序终止。" << std::endl;
-    return -1;
-}
+    // 2. 准备 TensorRT 引擎文件
+    // **[关键修复]** 使用手动字符串操作来替换文件扩展名，以绕过 std::filesystem 的 Bug
+    std::string engine_filepath;
+    std::string onnx_path_str = params.onnx_path;
 
-// 步骤 1: 创建 path 对象
-std::filesystem::path onnx_filepath(params.onnx_path);
-std::cout << "Debug: path object created successfully." << std::endl;
-std::cout << "ONNX filepath: " << onnx_filepath.string() << std::endl;
-
-// 步骤 2: 替换扩展名
-std::filesystem::path engine_filepath_path = onnx_filepath.replace_extension(".engine");
-std::cout << "Debug: replace_extension successful." << std::endl;
-
-// 步骤 3: 转换为字符串
-std::string engine_filepath = engine_filepath_path.string();
-std::cout << "Debug: .string() conversion successful." << std::endl;
-
-std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
-
-        std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
-        // 如果 .engine 文件不存在，则从 ONNX 文件构建它
+    // 查找最后一个 '.' 的位置
+    size_t last_dot_pos = onnx_path_str.find_last_of(".");
+    if (last_dot_pos != std::string::npos) {
+        // 如果找到了点，就取它之前的部分，然后拼接上新的扩展名
+        engine_filepath = onnx_path_str.substr(0, last_dot_pos) + ".engine";
+    } else {
+        // 如果没有找到点，就直接在末尾拼接
+        engine_filepath = onnx_path_str + ".engine";
+    }
+    
+    std::cout << "ONNX filepath: " << onnx_path_str << std::endl;
+    std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
+    
         if (!file_exists(engine_filepath)) {
             std::cout << "TensorRT engine file not found at: " << engine_filepath << std::endl;
             std::cout << "Building engine from ONNX file: " << params.onnx_path << "..." << std::endl;
