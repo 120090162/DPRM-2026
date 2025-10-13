@@ -72,6 +72,7 @@ if(CUDA_FOUND)
             ${DPRM_LIBS}
             ${OpenCV_LIBS}
             ${YOLOV5_TENSORRT_LIB}  # <-- 关键的链接
+            cudart
         )
     add_executable(yoloDetectDemo yoloDetectDemo.cpp)
     target_link_libraries(yoloDetectDemo
