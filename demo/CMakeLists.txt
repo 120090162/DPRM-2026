@@ -41,7 +41,7 @@ endif()
 
 # 添加 YOLOv5-TensorRT 的头文件路径
 # 假设头文件安装在 /usr/local/include
-include_directories(/usr/local/include)
+include_directories(/usr/local/include/yolov5-tensorrt)
 
 
 # camera
