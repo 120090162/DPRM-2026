@@ -149,57 +149,39 @@ sudo ./run.sh -t
 
 ## 🕹️ Play!
 ```bash
-# !!!Make sure the $LD_LIBRARY_PATH contains /usr/local/lib, if not, please add the following line to the end of ~/.bashrc
+# !!!Make sure the $LD_LIBRARY_PATH contains /usr/local/lib, if not, please add the following line to the end of ~/.bashrc or ~/.zshrc
 export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ```
-* Visualize the model in drake/mujoco
+* Run demo
 
-  * drake
+编译 `demo` 例程
+```bash
+cd demo
+mkdir build && cd build
+cmake ..
+make -j4
+```
+
+  * video
 
       ```bash
       # example
-      python scripts/visualize_model_drake.py kuavo/s46/biped_s46.urdf biped_s46
+      ./hik_lib
       ```
 
-  * mujoco
+  * tensorrt
 
       ```bash
       # example
-      python scripts/visualize_model_mujoco.py kuavo.yaml
+      ./tensorrt_demo
       ```
 
-* Run HLIP+CIMPC algorithm in drake/mujoco+drake
-
-  * drake
-
-      ```bash
-      # example
-      python demo/drake/achilles_se3/main.py --with_arms
-      ```
-
-  * mujoco+drake
-
-      ```bash
-      # example
-      python demo/mujoco/achilles/main_walk.py
-
-# 学习记录
-[海康威视图像转opencv](https://blog.51cto.com/u_15127647/4707382)
-[cmake使用](https://modern-cmake-cn.github.io/Modern-CMake-zh_CN/chapters/basics.html)
-[C++终端GUI使用](https://www.cnblogs.com/VeniVidiVici/p/17318232.html)
-[tensorrt使用](https://zhuanlan.zhihu.com/p/702631180)
-[tensorrt迁移yolov5使用](https://blog.csdn.net/qq_45983373/article/details/136636251)
-[tensorrt api迁移](https://docs.nvidia.com/deeplearning/tensorrt/latest/api/migration-guide.html#removed-c-api)
-[可视化模型](https://netron.app/)
-[yolov5迁移](https://github.com/wang-xinyu/tensorrtx/tree/trt10)
-[yolov5训练](https://github.com/Spphire/YOLOarmor-2022final)
-[上交自瞄参考1](https://github.com/Harry-hhj/CVRM2021-sjtu)
-[上交自瞄参考2](https://github.com/julyfun/rm.cv.fans)
-
-`TensorRT`的路径在`/usr/src/tensorrt`下面
-
-[数据集](https://github.com/zRzRzRzRzRzRzR/YOLO-of-RoboMaster-Keypoints-Detection-2023)
-[博客](https://sjtu-robomaster-team.github.io/)
+## TODO
+需要添加的功能测试
+- [ x ] 相机接口
+- [  ] tensorrt 加速接口
+- [  ] 卡尔曼滤波接口
+- [  ] PnP解算接口
 
 # 代码风格
 * 使用`pre-commit`来保证可维护性

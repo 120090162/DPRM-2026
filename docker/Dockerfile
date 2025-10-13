@@ -8,9 +8,16 @@ ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 LABEL maintainer="yebinzhong@link.cuhk.edu.cn"
-ENV REFRESH_AT=2025-8-12
+ENV REFRESH_AT=2025-10-13
 
-# dependencies for isaacgym
+# Gnome terminal support
+RUN apt-get update -y \
+    && apt-get install -y gnome-terminal \
+    dbus-x11 \
+    libcanberra-gtk-module \ 
+    libcanberra-gtk3-module
+
+# dependencies for ubuntu
 #
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -45,4 +52,16 @@ RUN DEBIAN_FRONTEND=noninteractive /bin/bash fishros \
     && rm -rf /var/lib/apt/lists/*  /tmp/* /var/tmp/* \
     && apt-get clean && apt autoclean
 
-CMD ["/bin/bash"]
+# setup zsh
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.1/zsh-in-docker.sh)" -- \
+    -t jispwoso -p git \
+    -p https://github.com/zsh-users/zsh-autosuggestions \
+    -p https://github.com/zsh-users/zsh-syntax-highlighting && \
+    chsh -s /bin/zsh
+CMD [ "/bin/zsh" ]
+
+# setup .zshrc
+RUN echo 'export TERM=xterm-256color\n\
+eval "$(register-python-argcomplete3 ros2)"\n\
+eval "$(register-python-argcomplete3 colcon)"\n'\
+>> /root/.zshrc
