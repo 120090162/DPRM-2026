@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdexcept>
 #include <filesystem> // C++17, 用于文件路径操作
+#include <fstream>    // **[修复 1]** 必须包含，用于 std::ifstream
 
 // OpenCV 头文件
 #include <opencv2/opencv.hpp>
@@ -13,12 +14,11 @@
 
 // ====================================================================================
 // 1. 参数结构体 (AppParams)
-//    - 沿用您参考代码中的结构，集中管理所有配置参数。
 // ====================================================================================
 struct AppParams {
     // --- 模型相关参数 ---
     std::string onnx_path;          // ONNX模型文件的路径 (必需)
-    int infer_width       = 416;    // 模型推理所需的输入图像宽度
+    int infer_width       = 416;    // 模型推理所需的输入图像宽度 (注意：此处未被Detector直接使用，但保留作为配置)
     int infer_height      = 416;    // 模型推理所需的输入图像高度
     // 注意: YOLOv5-TensorRT库会自动处理置信度和NMS阈值，
     // 我们可以在 Detector 初始化时设置它们。
@@ -68,25 +68,31 @@ void parse_arguments(int argc, char* argv[], AppParams& params) {
 
 // 检查文件是否存在的辅助函数
 bool file_exists(const std::string& name) {
-    std::ifstream f(name.c_str());
+    // **[修复 1]** std::ifstream f(name.c_str());
+    std::ifstream f(name);
     return f.good();
 }
 
 // ====================================================================================
 // 3. 绘制边界框函数
-//    - 功能: 在图像上绘制检测到的边界框和标签。
-//    - 已适配为使用 yolov5::Detection 结构体。
 // ====================================================================================
 void draw_bboxes(cv::Mat& image, const std::vector<yolov5::Detection>& detections) {
     for (const auto& det : detections) {
+        // **[修复 2a]** 使用 classId() 方法获取类别ID
+        int class_id = det.classId();
+        // **[修复 2b]** 使用 boundingBox() 方法获取边界框
+        const cv::Rect& box = det.boundingBox();
+        // **[修复 2c]** 使用 score() 方法获取置信度
+        double score = det.score();
+
         // 安全检查，防止类别ID越界
-        if (det.classId >= CLASS_NAMES.size()) continue;
+        if (class_id < 0 || class_id >= CLASS_NAMES.size()) continue;
 
         // 绘制矩形框
-        cv::rectangle(image, det.box, cv::Scalar(0, 255, 0), 2);
+        cv::rectangle(image, box, cv::Scalar(0, 255, 0), 2);
 
         // 准备标签文本，包含类别名和置信度
-        std::string label = CLASS_NAMES[det.classId] + ": " + cv::format("%.2f", det.confidence);
+        std::string label = CLASS_NAMES[class_id] + ": " + cv::format("%.2f", score);
 
         // 计算文本尺寸以便绘制背景
         int baseline;
@@ -94,21 +100,20 @@ void draw_bboxes(cv::Mat& image, const std::vector<yolov5::Detection>& detection
         
         // 绘制文本背景框
         cv::rectangle(image,
-                      cv::Point(det.box.x, det.box.y - label_size.height - baseline),
-                      cv::Point(det.box.x + label_size.width, det.box.y),
+                      cv::Point(box.x, box.y - label_size.height - baseline),
+                      cv::Point(box.x + label_size.width, box.y),
                       cv::Scalar(0, 255, 0),
                       cv::FILLED);
 
         // 放置文本
         cv::putText(image, label,
-                    cv::Point(det.box.x, det.box.y - baseline),
+                    cv::Point(box.x, box.y - baseline),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
     }
 }
 
 // ====================================================================================
 // 4. 主函数 (main)
-//    - 整个应用程序的入口点和主流程控制器。
 // ====================================================================================
 int main(int argc, char* argv[]) {
     // 1. 初始化与参数解析
@@ -133,13 +138,25 @@ int main(int argc, char* argv[]) {
         
         try {
             yolov5::Builder builder;
-            builder.init();
-            // 您可以在这里设置其他构建参数，例如 FP16 模式
-            // builder.build(params.onnx_path, engine_filepath, yolov5::Precision::FP16);
-            builder.build(params.onnx_path, engine_filepath);
+            // 确保 Builder 初始化成功
+            if (builder.init() != yolov5::RESULT_SUCCESS) {
+                std::cerr << "Error: yolov5::Builder init failed." << std::endl;
+                return -1;
+            }
+
+            // **[修复 3]** Builder 的构建方法是 buildEngine
+            yolov5::Result build_res = builder.buildEngine(params.onnx_path, engine_filepath);
+            // 您可以在这里设置其他构建参数，例如 FP16 模式:
+            // yolov5::Result build_res = builder.buildEngine(params.onnx_path, engine_filepath, yolov5::PRECISION_FP16);
+
+            if (build_res != yolov5::RESULT_SUCCESS) {
+                std::cerr << "Error building TensorRT engine. Result code: " << build_res << std::endl;
+                return -1;
+            }
+
             std::cout << "Engine built successfully and saved to " << engine_filepath << std::endl;
         } catch (const std::exception& e) {
-            std::cerr << "Error building TensorRT engine: " << e.what() << std::endl;
+            std::cerr << "Error building TensorRT engine (exception): " << e.what() << std::endl;
             return -1;
         }
     } else {
@@ -152,16 +169,32 @@ int main(int argc, char* argv[]) {
         std::cout << "Initializing YOLOv5 detector..." << std::endl;
         detector = std::make_unique<yolov5::Detector>();
         
-        // 设置检测器参数（可以从命令行读取，此处使用默认值）
+        // **[修复 4a]** init() 不接受阈值参数，它只接受 flags
+        if (detector->init() != yolov5::RESULT_SUCCESS) {
+            std::cerr << "Error: yolov5::Detector init failed." << std::endl;
+            return -1;
+        }
+        
+        // **[修复 4b]** 通过 setScoreThreshold 和 setNmsThreshold 设置阈值
         float conf_thresh = 0.4;
         float nms_thresh = 0.5;
-        detector->init(conf_thresh, nms_thresh);
+        detector->setScoreThreshold(conf_thresh);
+        detector->setNmsThreshold(nms_thresh);
+
+        // 加载类别名称
+        yolov5::Classes classes;
+        classes.load(CLASS_NAMES);
+        detector->setClasses(classes);
         
         // 加载引擎
-        detector->loadEngine(engine_filepath);
+        if (detector->loadEngine(engine_filepath) != yolov5::RESULT_SUCCESS) {
+            std::cerr << "Error: Failed to load TensorRT engine." << std::endl;
+            return -1;
+        }
+
         std::cout << "Detector initialized successfully." << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Error initializing detector: " << e.what() << std::endl;
+        std::cerr << "Error initializing detector (exception): " << e.what() << std::endl;
         return -1;
     }
 
@@ -191,8 +224,11 @@ int main(int argc, char* argv[]) {
         }
 
         // --- 核心推理 ---
-        // 使用 YOLOv5-TensorRT 库进行检测，所有复杂的预处理、推理和后处理都被封装在这一行代码中！
-        detector->detect(frame, &detections);
+        // 使用 YOLOv5-TensorRT 库进行检测
+        if (detector->detect(frame, &detections) != yolov5::RESULT_SUCCESS) {
+             std::cerr << "Warning: Detection failed for a frame." << std::endl;
+             // 继续下一帧
+        }
         
         // --- 绘制结果 ---
         draw_bboxes(frame, detections);
