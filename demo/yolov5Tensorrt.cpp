@@ -7,7 +7,7 @@
 
     // OpenCV 头文件
     #include <opencv2/opencv.hpp>
-
+    #include <dprm/dprm.h>
     // YOLOv5-TensorRT 库的头文件
     #include <yolov5_builder.hpp>
     #include <yolov5_detector.hpp>
@@ -148,7 +148,7 @@
     
     std::cout << "ONNX filepath: " << onnx_path_str << std::endl;
     std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
-    
+
         if (!file_exists(engine_filepath)) {
             std::cout << "TensorRT engine file not found at: " << engine_filepath << std::endl;
             std::cout << "Building engine from ONNX file: " << params.onnx_path << "..." << std::endl;
@@ -216,32 +216,56 @@
             return -1;
         }
 
-        // 4. 初始化摄像头
-        std::cout << "Opening camera..." << std::endl;
-        cv::VideoCapture cap(0); // 0 代表默认摄像头
-        if (!cap.isOpened()) {
-            std::cerr << "Error: Could not open camera." << std::endl;
-            return -1;
-        }
-        std::cout << "Camera opened successfully." << std::endl;
-        
-    { //创建一个局部作用域来管理 detector 的生命周期
-        // 5. 主循环 - 实时检测
-        const std::string window_name = "YOLOv5-TensorRT Real-time Detection";
-        cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+        // 4. 初始化 HIK 相机 (需要 rm::Camera 和 rm::openHik 函数)
 
-        cv::Mat frame;
-        std::vector<yolov5::Detection> detections;
 
-        std::cout << "Starting real-time detection... Press 'ESC' to exit." << std::endl;
-        while (true) {
-            // 从摄像头捕获一帧
-            cap >> frame;
-            if (frame.empty()) {
-                std::cerr << "Warning: Captured empty frame." << std::endl;
-                break;
+            rm::message("Initializing HIK camera...", rm::MSG_NOTE);
+            int camera_num = -1;
+
+            // 检查可用相机数量（使用 rm::getHikCameraNum 假设它存在于您的库中）
+            if (!rm::getHikCameraNum(camera_num) || camera_num < 1) {
+                std::cerr << "Error: Failed to get camera or no camera found." << std::endl;
+                return -1;
             }
 
+            std::unique_ptr<rm::Camera> camera = std::make_unique<rm::Camera>();
+
+            // 使用 rm::openHik 打开相机
+            // 注意: 您需要将 AppParams 中的 exposure/gain/gamma 传递进来
+            // 这里使用默认值，如果需要，请根据您的 AppParams 结构体进行调整
+            double default_exposure = 2500.0; // 假设的默认值
+            double default_gain = 12.0;
+            double default_gamma = 200.0;
+
+            if (!rm::openHik(camera.get(), 1, nullptr, nullptr, nullptr, default_exposure, default_gain, default_gamma)) {
+                std::cerr << "Error: Failed to open camera 1." << std::endl;
+                return -1;
+            }
+            std::cout << "Camera opened successfully." << std::endl;
+
+                            
+
+
+
+    { //创建一个局部作用域来管理 detector 的生命周期
+        // 5. 主循环 - 实时检测
+            const std::string window_name = "YOLOv5-TensorRT Real-time Detection";
+            cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+
+            cv::Mat frame;
+            std::vector<yolov5::Detection> detections;
+
+            std::cout << "Starting real-time detection... Press 'ESC' to exit." << std::endl;
+            while (true) {
+                // 关键区别：使用 rm::Camera 的 buffer->pop() 取流
+        std::shared_ptr<rm::Frame> frame = camera->buffer->pop();
+        if (frame == nullptr || !frame->image || frame->image->empty()) {
+            // 处理等待或超时...
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+
+    cv::Mat current_frame = *frame->image; // 从 rm::Frame 中获取 cv::Mat
             // --- 核心推理 ---
             // 使用 YOLOv5-TensorRT 库进行检测
             if (detector->detect(frame, &detections) != yolov5::RESULT_SUCCESS) {
