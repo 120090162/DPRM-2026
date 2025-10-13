@@ -1,10 +1,3 @@
-好的，这是为您重写的代码注释。代码本身保持不变，仅对注释进行了优化、统一和补充，使其更加清晰和专业。
-
-code
-C++
-download
-content_copy
-expand_less
 /**
  * @file main.cpp
  * @brief 使用 YOLOv5-TensorRT 和海康相机进行实时目标检测的示例程序。
