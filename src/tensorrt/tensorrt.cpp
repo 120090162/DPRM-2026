@@ -232,12 +232,9 @@ bool rm::initTrtEngine(const std::string& engine_file, nvinfer1::IExecutionConte
         std::string error_message = e.what();
         rm::message("TensoRT Engine : " + error_message, rm::MSG_ERROR);
         if (*context) {
-            (*context)->destroy();
+            delete *context; // 替代 destroy()
+            *context = nullptr;
         }
-        // if (*context) {
-        //     delete *context; // 替代 destroy()
-        //     *context = nullptr;
-        // }
         return false;
     }
 }
