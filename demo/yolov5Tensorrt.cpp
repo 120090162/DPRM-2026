@@ -20,13 +20,16 @@
 #include <dprm/dprm.h>
 
 // ====================================================================================
-// 1. 参数结构体 (AppParams)
+// 1. 参数结构体 (AppParams) - 已修改
 // ====================================================================================
 struct AppParams {
     // --- 模型相关参数 ---
     std::string onnx_path;
     int infer_width       = 416;
     int infer_height      = 416;
+    // [新增] 添加置信度和NMS阈值参数
+    double conf_thresh    = 0.4;    // 置信度阈值，低于此值的预测框将被过滤
+    double nms_thresh     = 0.5;    // 非极大值抑制(NMS)的IOU阈值
 
     // --- 相机相关参数 (从示例代码中添加) ---
     double exposure       = 2500.0;
@@ -42,19 +45,23 @@ const std::vector<std::string> CLASS_NAMES = {
 };
 
 // ====================================================================================
-// 2. 帮助与命令行解析函数 (已为您添加相机参数)
+// 2. 帮助与命令行解析函数 - 已修改
 // ====================================================================================
 void print_usage(const char* prog_name) {
+    AppParams defaults; // 用于显示默认值
     std::cout << "\n用法: " << prog_name << " -m <path_to_model.onnx> [可选参数]\n\n"
               << "必需参数:\n"
               << "  -m, --model <path>      ONNX模型文件的路径。\n\n"
               << "可选模型参数:\n"
-              << "  --width <int>           模型推理宽度 (默认: 416)\n"
-              << "  --height <int>          模型推理高度 (默认: 416)\n\n"
+              << "  --width <int>           模型推理宽度 (默认: " << defaults.infer_width << ")\n"
+              << "  --height <int>          模型推理高度 (默认: " << defaults.infer_height << ")\n"
+              // [新增] 添加新参数的帮助说明
+              << "  --conf <float>          置信度阈值 (默认: " << defaults.conf_thresh << ")\n"
+              << "  --nms <float>           NMS阈值 (默认: " << defaults.nms_thresh << ")\n\n"
               << "可选相机参数:\n"
-              << "  --exposure <float>      相机曝光时间 (默认: 2500.0)\n"
-              << "  --gain <float>          相机增益 (默认: 12.0)\n"
-              << "  --gamma <float>         相机Gamma值 (默认: 200.0)\n\n"
+              << "  --exposure <float>      相机曝光时间 (默认: " << defaults.exposure << ")\n"
+              << "  --gain <float>          相机增益 (默认: " << defaults.gain << ")\n"
+              << "  --gamma <float>         相机Gamma值 (默认: " << defaults.gamma << ")\n\n"
               << "其他:\n"
               << "  -h, --help              显示此帮助信息。\n" << std::endl;
 }
@@ -77,6 +84,12 @@ void parse_arguments(int argc, char* argv[], AppParams& params) {
             params.gain = std::stod(argv[++i]);
         } else if (arg == "--gamma" && i + 1 < argc) {
             params.gamma = std::stod(argv[++i]);
+        }
+        // [新增] 添加解析新参数的逻辑
+        else if (arg == "--conf" && i + 1 < argc) {
+            params.conf_thresh = std::stod(argv[++i]);
+        } else if (arg == "--nms" && i + 1 < argc) {
+            params.nms_thresh = std::stod(argv[++i]);
         }
         else {
             std::cerr << "错误: 未知或不完整的参数: " << arg << std::endl;
@@ -186,8 +199,12 @@ int main(int argc, char* argv[]) {
             return -1;
         }
         
-        detector->setScoreThreshold(0.4);
-        detector->setNmsThreshold(0.5);
+        // [修改] 使用从命令行解析的参数来设置阈值
+        detector->setScoreThreshold(params.conf_thresh);
+        detector->setNmsThreshold(params.nms_thresh);
+        std::cout << "设置置信度阈值 (conf): " << params.conf_thresh << std::endl;
+        std::cout << "设置NMS阈值 (nms): " << params.nms_thresh << std::endl;
+
 
         yolov5::Classes classes;
         classes.load(CLASS_NAMES);
