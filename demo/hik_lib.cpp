@@ -6,13 +6,6 @@
 
 // 为了让代码能够独立编译，这里提供了getTime和getDoubleOfS的示例实现。
 // 如果您的项目中已有这些函数，请删除或注释掉这部分。
-#ifndef DUMMY_TIME_FUNCTIONS
-#define DUMMY_TIME_FUNCTIONS
-auto getTime() { return std::chrono::steady_clock::now(); }
-double getDoubleOfS(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {
-    return std::chrono::duration<double>(end - start).count();
-}
-#endif
 
 using namespace std;
 
