@@ -8,14 +8,7 @@
 #include <condition_variable> // 用于线程通信
 #include <atomic>         // 用于原子操作的标志位
 
-// 为了让代码能够独立编译，这里提供了getTime和getDoubleOfS的示例实现。
-#ifndef DUMMY_TIME_FUNCTIONS
-#define DUMMY_TIME_FUNCTIONS
-auto getTime() { return std::chrono::steady_clock::now(); }
-double getDoubleOfS(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {
-    return std::chrono::duration<double>(end - start).count();
-}
-#endif
+
 
 // =========== 新增：线程安全的帧队列 ===========
 std::queue<cv::Mat> frame_queue;
