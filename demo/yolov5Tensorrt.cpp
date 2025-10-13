@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
     // 自动生成 .engine 文件路径
     std::filesystem::path onnx_filepath(params.onnx_path);
     std::string engine_filepath = onnx_filepath.replace_extension(".engine").string();
-
+    std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
     // 如果 .engine 文件不存在，则从 ONNX 文件构建它
     if (!file_exists(engine_filepath)) {
         std::cout << "TensorRT engine file not found at: " << engine_filepath << std::endl;
@@ -161,6 +161,7 @@ int main(int argc, char* argv[]) {
         }
     } else {
         std::cout << "Found existing TensorRT engine file: " << engine_filepath << std::endl;
+        
     }
 
     // 3. 初始化 YOLOv5 检测器
