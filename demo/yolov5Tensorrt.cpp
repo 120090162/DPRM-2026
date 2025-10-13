@@ -129,6 +129,7 @@ int main(int argc, char* argv[]) {
     // 2. 准备 TensorRT 引擎文件
     // 自动生成 .engine 文件路径
     std::filesystem::path onnx_filepath(params.onnx_path);
+    std::cout << "ONNX filepath: " << std::endl;
     std::string engine_filepath = onnx_filepath.replace_extension(".engine").string();
     std::cout << "TensorRT engine filepath: " << engine_filepath << std::endl;
     // 如果 .engine 文件不存在，则从 ONNX 文件构建它
