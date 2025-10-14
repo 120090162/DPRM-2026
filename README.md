@@ -120,7 +120,7 @@ sudo apt update
 # install
 ./OpenCV-4-10-0-amd64.sh
 # once the installation is done...
-rm OpenCV-4-10-0-amd64.sh
+# rm OpenCV-4-10-0-amd64.sh
 # just a tip to save an additional 275 MB
 sudo rm -rf ~/opencv
 sudo rm -rf ~/opencv_contrib
@@ -178,10 +178,10 @@ make -j4
 
 ## TODO
 需要添加的功能测试
-- [ x ] 相机接口
-- [  ] tensorrt 加速接口
-- [  ] 卡尔曼滤波接口
-- [  ] PnP解算接口
+- ✅ 相机接口
+- ✅ tensorrt 加速接口
+- ❌ 卡尔曼滤波接口
+- ❌ PnP解算接口
 
 # 代码风格
 * 使用`pre-commit`来保证可维护性

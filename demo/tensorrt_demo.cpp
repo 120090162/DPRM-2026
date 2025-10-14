@@ -21,13 +21,15 @@ using namespace rm;
 int main() {
     nvinfer1::IExecutionContext* armor_context_;
 
-    std::string onnx_file = "./best_cv.onnx";
+    std::string onnx_file = "./test/v5n416.onnx";
     std::string engine_file = "model.engine";
 
     if (access(engine_file.c_str(), F_OK) == 0) {
+        rm::message("Found engine file, directly load it.", rm::MSG_NOTE);
         if (!rm::initTrtEngine(engine_file, &armor_context_))
             exit(-1);
     } else if (access(onnx_file.c_str(), F_OK) == 0) {
+        rm::message("Found ONNX file, converting to engine.", rm::MSG_NOTE);
         if (!rm::initTrtOnnx(onnx_file, engine_file, &armor_context_, 1U))
             exit(-1);
     } else {

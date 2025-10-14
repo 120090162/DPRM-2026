@@ -32,6 +32,9 @@ include_directories(${DPRM_INCLUDE_DIRS})
 message(STATUS "DPRM_INCLUDE_DIRS: ${DPRM_INCLUDE_DIRS}")
 message(STATUS "DPRM_LIBS: ${DPRM_LIBS}")
 
+# 拷贝需要的测试文件
+add_subdirectory(test)
+
 # camera
 add_executable(uvc_lib uvc_lib.cpp)
 target_link_libraries(uvc_lib
@@ -56,3 +59,4 @@ if(CUDA_FOUND)
 #    configure_file(best_cv.onnx
 #                ${CMAKE_BINARY_DIR}/best_cv.onnx COPYONLY)
 endif()
+
