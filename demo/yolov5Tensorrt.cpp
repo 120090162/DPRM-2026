@@ -157,40 +157,7 @@ bool file_exists(const std::string& name) {
  * @param image [in, out] 要在其上绘制的图像 (cv::Mat)。
  * @param detections 检测结果的向量。
  */
-using yolov5::Detection;
-void draw_bboxes(cv::Mat& image, const std::vector<Detection>& detections) {
-    for (const auto& det : detections) {
-        // 获取检测结果的基本信息
-        int class_id = det.classId();
-        const cv::Rect& box = det.boundingBox();
-        double score = det.score();
-
-        // 安全检查，防止类别ID越界
-        if (class_id < 0 || class_id >= CLASS_NAMES.size()) continue;
-
-        // 绘制边界框
-        cv::rectangle(image, box, cv::Scalar(0, 255, 0), 2);
-
-        // 准备标签文本，格式为 "类别名: 置信度"
-        std::string label = CLASS_NAMES[class_id] + ": " + cv::format("%.2f", score);
-
-        // 计算标签文本的尺寸以便绘制背景
-        int baseline;
-        cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
-        
-        // 绘制标签背景框
-        cv::rectangle(image,
-                    cv::Point(box.x, box.y - label_size.height - baseline),
-                    cv::Point(box.x + label_size.width, box.y),
-                    cv::Scalar(0, 255, 0),
-                    cv::FILLED);
-
-        // 绘制标签文本
-        cv::putText(image, label,
-                    cv::Point(box.x, box.y - baseline),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
-    }
-}
+void draw_bboxes(cv::Mat& image, const std::vector<yolov5::Detection>& detections);
 
 // ====================================================================================
 // 3. 主函数 (main)
@@ -407,4 +374,42 @@ int main(int argc, char* argv[]) {
     std::cout << "完成。" << std::endl;
 
     return 0;
+}
+
+// ====================================================================================
+// 4. 辅助函数实现
+// ====================================================================================
+
+void draw_bboxes(cv::Mat& image, const std::vector<yolov5::Detection>& detections) {
+    for (const auto& det : detections) {
+        // 获取检测结果的基本信息
+        int class_id = det.classId();
+        const cv::Rect& box = det.boundingBox();
+        double score = det.score();
+
+        // 安全检查，防止类别ID越界
+        if (class_id < 0 || class_id >= CLASS_NAMES.size()) continue;
+
+        // 绘制边界框
+        cv::rectangle(image, box, cv::Scalar(0, 255, 0), 2);
+
+        // 准备标签文本，格式为 "类别名: 置信度"
+        std::string label = CLASS_NAMES[class_id] + ": " + cv::format("%.2f", score);
+
+        // 计算标签文本的尺寸以便绘制背景
+        int baseline;
+        cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
+        
+        // 绘制标签背景框
+        cv::rectangle(image,
+                    cv::Point(box.x, box.y - label_size.height - baseline),
+                    cv::Point(box.x + label_size.width, box.y),
+                    cv::Scalar(0, 255, 0),
+                    cv::FILLED);
+
+        // 绘制标签文本
+        cv::putText(image, label,
+                    cv::Point(box.x, box.y - baseline),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
+    }
 }
