@@ -157,7 +157,8 @@ bool file_exists(const std::string& name) {
  * @param image [in, out] 要在其上绘制的图像 (cv::Mat)。
  * @param detections 检测结果的向量。
  */
-void draw_bboxes(cv::Mat& image, const std::vector<yolov5::Detection>& detections) {
+using yolov5::Detection;
+void draw_bboxes(cv::Mat& image, const std::vector<Detection>& detections) {
     for (const auto& det : detections) {
         // 获取检测结果的基本信息
         int class_id = det.classId();
@@ -318,7 +319,7 @@ int main(int argc, char* argv[]) {
 
     cv::Mat frame_mat;
     std::vector<yolov5::Detection> detections;
-    auto frame_wait_tp = rm::getTime(); // 假设 getTime() 是一个返回当前时间的函数
+    auto frame_wait_tp = getTime();
 
     // 用于计算帧率的变量
     int camera_frame_count = 0; // 记录相机成功捕获的帧数
@@ -333,7 +334,7 @@ int main(int argc, char* argv[]) {
         
         // 如果帧无效，进行超时检查
         if (frame_ptr == nullptr || !frame_ptr->image || frame_ptr->image->empty()) {
-            if (rm::getDoubleOfS(frame_wait_tp, rm::getTime()) > 2.0) { // 假设 getDoubleOfS 计算时间差（秒）
+            if (getDoubleOfS(frame_wait_tp, getTime()) > 2.0) { // 假设 getDoubleOfS 计算时间差（秒）
                 std::cerr << "错误: 图像捕获超时!" << std::endl;
                 break;
             }
@@ -341,7 +342,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
         // 重置超时计时器，并增加相机帧计数
-        frame_wait_tp = rm::getTime();
+        frame_wait_tp = getTime();
         camera_frame_count++;
 
         frame_mat = *(frame_ptr->image);
