@@ -34,7 +34,7 @@
 #include <opencv2/opencv.hpp>        // OpenCV核心库
 
 // DpRM 主头文件，已包含所有需要的 YOLOv5-TensorRT 公共头文件
-#include <dprm/dprm.h>
+#include <dprm.h>
 
 // ====================================================================================
 // 1. 全局配置与定义

@@ -16,7 +16,7 @@ target_link_libraries(dprm_yolov5_tensorrt
 
 target_include_directories(dprm_yolov5_tensorrt
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/include/yolov5_tensorrt
+        ../../include
 )
 
 set_target_properties(dprm_yolov5_tensorrt PROPERTIES
