@@ -81,6 +81,7 @@ add_subdirectory(src/video)
 
 if(CUDA_FOUND)
     add_subdirectory(src/tensorrt)
+    add_subdirectory(src/yolov5_tensorrt)
     add_subdirectory(cuda)
 endif()
 
@@ -101,6 +102,7 @@ if(CUDA_FOUND)
             dprm_uniterm
             dprm_video
             dprm_tensorrt
+            dprm_yolov5_tensorrt
             dprm_cudatools
     )
 else()

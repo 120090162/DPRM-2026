@@ -42,6 +42,12 @@
 
 #include <tensorrt/tensorrt.h>
 
+#include <yolov5_tensorrt/yolov5_builder.hpp>
+#include <yolov5_tensorrt/yolov5_common.hpp>
+#include <yolov5_tensorrt/yolov5_detection.hpp>
+#include <yolov5_tensorrt/yolov5_detector.hpp>
+#include <yolov5_tensorrt/yolov5_logging.hpp>
+
 #include <uniterm/uniterm.h>
 
 #include <utils/delay.h>

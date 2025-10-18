@@ -33,11 +33,7 @@
 // 第三方库头文件
 #include <opencv2/opencv.hpp>        // OpenCV核心库
 
-#include <yolov5_builder.hpp>        // YOLOv5-TensorRT 引擎构建器
-#include <yolov5_detector.hpp>       // YOLOv5-TensorRT 检测器
-
-// 假设的RM库头文件 (用于海康相机)
-// 确保这些头文件的路径已添加到编译器的包含目录中
+// DpRM 主头文件，已包含所有需要的 YOLOv5-TensorRT 公共头文件
 #include <dprm/dprm.h>
 
 // ====================================================================================
@@ -322,7 +318,7 @@ int main(int argc, char* argv[]) {
 
     cv::Mat frame_mat;
     std::vector<yolov5::Detection> detections;
-    auto frame_wait_tp = getTime(); // 假设 getTime() 是一个返回当前时间的函数
+    auto frame_wait_tp = rm::getTime(); // 假设 getTime() 是一个返回当前时间的函数
 
     // 用于计算帧率的变量
     int camera_frame_count = 0; // 记录相机成功捕获的帧数
@@ -337,7 +333,7 @@ int main(int argc, char* argv[]) {
         
         // 如果帧无效，进行超时检查
         if (frame_ptr == nullptr || !frame_ptr->image || frame_ptr->image->empty()) {
-            if (getDoubleOfS(frame_wait_tp, getTime()) > 2.0) { // 假设 getDoubleOfS 计算时间差（秒）
+            if (rm::getDoubleOfS(frame_wait_tp, rm::getTime()) > 2.0) { // 假设 getDoubleOfS 计算时间差（秒）
                 std::cerr << "错误: 图像捕获超时!" << std::endl;
                 break;
             }
@@ -345,7 +341,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
         // 重置超时计时器，并增加相机帧计数
-        frame_wait_tp = getTime();
+        frame_wait_tp = rm::getTime();
         camera_frame_count++;
 
         frame_mat = *(frame_ptr->image);
