@@ -19,11 +19,11 @@ target_include_directories(dprm_yolov5_tensorrt
         ../../include
 )
 
-set_target_properties(dprm_yolov5_tensorrt PROPERTIES
-    CXX_STANDARD 20
-    POSITION_INDEPENDENT_CODE ON
-)
+# set_target_properties(dprm_yolov5_tensorrt PROPERTIES
+#     CXX_STANDARD 20
+#     POSITION_INDEPENDENT_CODE ON
+# )
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(dprm_yolov5_tensorrt PRIVATE -W -Wall -Wno-unused-parameter)
-endif()
+# if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#     target_compile_options(dprm_yolov5_tensorrt PRIVATE -W -Wall -Wno-unused-parameter)
+# endif()
