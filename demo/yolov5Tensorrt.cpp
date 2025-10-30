@@ -33,6 +33,9 @@
 // 第三方库头文件
 #include <opencv2/opencv.hpp>        // OpenCV核心库
 
+#include <yolov5_builder.hpp>        // YOLOv5-TensorRT 引擎构建器
+#include <yolov5_detector.hpp>       // YOLOv5-TensorRT 检测器
+
 // DpRM 主头文件，已包含所有需要的 YOLOv5-TensorRT 公共头文件
 #include <dprm.h> 
 

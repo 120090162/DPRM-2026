@@ -59,6 +59,16 @@ target_link_libraries(hik_lib
     ${CERES_LIBRARIES}
 )
 
+find_library(YOLOV5_TENSORRT_LIB NAMES yolov5-tensorrt HINTS /usr/local/lib)
+
+# 确保找到了库
+if(NOT YOLOV5_TENSORRT_LIB)
+    message(FATAL_ERROR "Could not find yolov5-tensorrt library. Ensure it is built and installed.")
+endif()
+
+# 添加 YOLOv5-TensorRT 的头文件路径
+# 假设头文件安装在 /usr/local/include
+include_directories(/usr/local/include/yolov5-tensorrt)
 
 
 if(CUDA_FOUND)
@@ -71,6 +81,12 @@ if(CUDA_FOUND)
     target_link_libraries(yolov5Tensorrt
         ${DPRM_LIBS}
         ${OpenCV_LIBS}
+        ${YOLOV5_TENSORRT_LIB}  # <-- 关键的链接
+        # **[关键修复]** 显式添加 TensorRT 动态库
+            nvinfer             # TensorRT Core (Runtime and Builder)
+            nvonnxparser        # TensorRT ONNX Parser
+            cudart
+
     )
     add_executable(yoloDetectDemo yoloDetectDemo.cpp)
     target_link_libraries(yoloDetectDemo
