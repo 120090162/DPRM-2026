@@ -15,6 +15,8 @@ target_link_libraries(dprm_yolov5_tensorrt
 )
 
 target_include_directories(dprm_yolov5_tensorrt
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../include/yolov5_tensorrt
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
         $<INSTALL_INTERFACE:include/dprm>

@@ -78,8 +78,10 @@ add_subdirectory(src/solver)
 add_subdirectory(src/uniterm)
 add_subdirectory(src/utils)
 add_subdirectory(src/video)
+add_subdirectory(demo)
 
 if(CUDA_FOUND)
+    message(STATUS "CUDA Found. Version: ${CUDA_VERSION}")
     add_subdirectory(src/tensorrt)
     add_subdirectory(src/yolov5_tensorrt)
     add_subdirectory(cuda)
@@ -106,6 +108,7 @@ if(CUDA_FOUND)
             dprm_cudatools
     )
 else()
+message(WARNING "CUDA NOT Found. TensorRT and related targets will be disabled.")
     set(
         TARGETS_LIST
             dprm_attack
@@ -119,6 +122,7 @@ else()
             dprm_timer
             dprm_uniterm
             dprm_video
+            
     )
 endif()
 

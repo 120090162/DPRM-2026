@@ -32,6 +32,7 @@ include_directories(${DPRM_INCLUDE_DIRS})
 message(STATUS "DPRM_INCLUDE_DIRS: ${DPRM_INCLUDE_DIRS}")
 message(STATUS "DPRM_LIBS: ${DPRM_LIBS}")
 
+# Mod: 添加yolov5依赖
 find_library(YOLOV5_TENSORRT_LIB NAMES yolov5-tensorrt HINTS /usr/local/lib)
 
 # 确保找到了库
@@ -42,7 +43,6 @@ endif()
 # 添加 YOLOv5-TensorRT 的头文件路径
 # 假设头文件安装在 /usr/local/include
 include_directories(/usr/local/include/yolov5-tensorrt)
-
 
 # camera
 add_executable(uvc_lib uvc_lib.cpp)
