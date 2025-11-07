@@ -45,19 +45,19 @@ endif()
 include_directories(/usr/local/include/yolov5-tensorrt)
 
 # camera
-add_executable(uvc_lib uvc_lib.cpp)
-target_link_libraries(uvc_lib
-    ${DPRM_LIBS}
-    ${OpenCV_LIBS}
-    ${CERES_LIBRARIES}
-)
+# add_executable(uvc_lib uvc_lib.cpp)
+# target_link_libraries(uvc_lib
+#     ${DPRM_LIBS}
+#     ${OpenCV_LIBS}
+#     ${CERES_LIBRARIES}
+# )
 
-add_executable(hik_lib hik_lib.cpp)
-target_link_libraries(hik_lib
-    ${DPRM_LIBS}
-    ${OpenCV_LIBS}
-    ${CERES_LIBRARIES}
-)
+# add_executable(hik_lib hik_lib.cpp)
+# target_link_libraries(hik_lib
+#     ${DPRM_LIBS}
+#     ${OpenCV_LIBS}
+#     ${CERES_LIBRARIES}
+# )
 
 find_library(YOLOV5_TENSORRT_LIB NAMES yolov5-tensorrt HINTS /usr/local/lib)
 
@@ -67,15 +67,15 @@ if(NOT YOLOV5_TENSORRT_LIB)
 endif()
 
 # 添加 YOLOv5-TensorRT 的头文件路径
-# 假设头文件安装在 /usr/local/include
+# 头文件安装在 /usr/local/include
 include_directories(/usr/local/include/yolov5-tensorrt)
 
 
 if(CUDA_FOUND)
-    add_executable(tensorrt_demo tensorrt_demo.cpp)
-        target_link_libraries(tensorrt_demo
-            ${DPRM_LIBS}
-        )
+    # add_executable(tensorrt_demo tensorrt_demo.cpp)
+    #     target_link_libraries(tensorrt_demo
+    #         ${DPRM_LIBS}
+    #     )
 
     add_executable(yolov5Tensorrt yolov5Tensorrt.cpp)
     target_link_libraries(yolov5Tensorrt
@@ -88,9 +88,9 @@ if(CUDA_FOUND)
             cudart
 
     )
-    add_executable(yoloDetectDemo yoloDetectDemo.cpp)
-    target_link_libraries(yoloDetectDemo
-        ${DPRM_LIBS}
-        ${OpenCV_LIBS}
-    )
+    # add_executable(yoloDetectDemo yoloDetectDemo.cpp)
+    # target_link_libraries(yoloDetectDemo
+    #     ${DPRM_LIBS}
+    #     ${OpenCV_LIBS}
+    # )
 endif()

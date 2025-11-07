@@ -7,3 +7,5 @@ demo/img/
 *.onnx
 *.engine
 *.pt
+*.jpg
+*.png
